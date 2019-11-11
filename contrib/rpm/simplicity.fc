@@ -1,0 +1,8 @@
+/usr/bin/simplicity-cli		--	gen_context(system_u:object_r:simplicity_exec_t,s0)
+/usr/sbin/simplicityd		--	gen_context(system_u:object_r:simplicity_exec_t,s0)
+/usr/lib(64)?/simplicity/simplicityd		--	gen_context(system_u:object_r:simplicity_exec_t,s0)
+
+/etc/simplicity(/.*)?		gen_context(system_u:object_r:simplicity_conf_t,s0)
+/var/lib/simplicity(/.*)?		gen_context(system_u:object_r:simplicity_var_lib_t,s0)
+
+(/var)?/run/simplicityd(/.*)?   gen_context(system_u:object_r:simplicity_var_run_t,s0)

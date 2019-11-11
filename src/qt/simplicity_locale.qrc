@@ -1,0 +1,37 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="bg">locale/simplicity_bg.qm</file>
+        <file alias="ca">locale/simplicity_ca.qm</file>
+        <file alias="cs">locale/simplicity_cs.qm</file>
+        <file alias="da">locale/simplicity_da.qm</file>
+        <file alias="de">locale/simplicity_de.qm</file>
+        <file alias="en">locale/simplicity_en.qm</file>
+        <file alias="en_GB">locale/simplicity_en_GB.qm</file>
+        <file alias="en_US">locale/simplicity_en_US.qm</file>
+        <file alias="eo">locale/simplicity_eo.qm</file>
+        <file alias="es">locale/simplicity_es.qm</file>
+        <file alias="es_ES">locale/simplicity_es_ES.qm</file>
+        <file alias="fi">locale/simplicity_fi.qm</file>
+        <file alias="fr_FR">locale/simplicity_fr_FR.qm</file>
+        <file alias="hi_IN">locale/simplicity_hi_IN.qm</file>
+        <file alias="hr">locale/simplicity_hr.qm</file>
+        <file alias="hr_HR">locale/simplicity_hr_HR.qm</file>
+        <file alias="it">locale/simplicity_it.qm</file>
+        <file alias="ja">locale/simplicity_ja.qm</file>
+        <file alias="ko_KR">locale/simplicity_ko_KR.qm</file>
+        <file alias="lt_LT">locale/simplicity_lt_LT.qm</file>
+        <file alias="nl">locale/simplicity_nl.qm</file>
+        <file alias="pl">locale/simplicity_pl.qm</file>
+        <file alias="pt">locale/simplicity_pt.qm</file>
+        <file alias="pt_BR">locale/simplicity_pt_BR.qm</file>
+        <file alias="ro_RO">locale/simplicity_ro_RO.qm</file>
+        <file alias="ru">locale/simplicity_ru.qm</file>
+        <file alias="sk">locale/simplicity_sk.qm</file>
+        <file alias="sv">locale/simplicity_sv.qm</file>
+        <file alias="tr">locale/simplicity_tr.qm</file>
+        <file alias="uk">locale/simplicity_uk.qm</file>
+        <file alias="vi">locale/simplicity_vi.qm</file>
+        <file alias="zh_CN">locale/simplicity_zh_CN.qm</file>
+        <file alias="zh_TW">locale/simplicity_zh_TW.qm</file>
+    </qresource>
+</RCC>

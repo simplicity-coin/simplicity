@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Simplicity
+Comment=Simplicity P2P Cryptocurrency
+Comment[fr]=Simplicity, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Simplicity, eşten eşe kriptografik sanal para birimi
+Exec=simplicity-qt %u
+Terminal=false
+Type=Application
+Icon=simplicity128
+MimeType=x-scheme-handler/simplicity;
+Categories=Office;Finance;
+StartupWMClass=Simplicity-qt

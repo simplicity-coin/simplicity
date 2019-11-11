@@ -1,0 +1,3 @@
+usr/local/bin/simplicityd usr/bin
+usr/local/bin/simplicity-cli usr/bin
+debian/examples/simplicity.conf etc/simplicity

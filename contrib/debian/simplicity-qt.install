@@ -1,0 +1,6 @@
+usr/local/bin/simplicity-qt usr/bin
+share/pixmaps/simplicity32.xpm usr/share/pixmaps
+share/pixmaps/simplicity16.xpm usr/share/pixmaps
+share/pixmaps/simplicity128.png usr/share/pixmaps
+debian/simplicity-qt.desktop usr/share/applications
+debian/simplicity-qt.protocol usr/share/kde4/services/
