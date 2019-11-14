@@ -3079,30 +3079,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // return state.DoS(100, error("ConnectBlock() : PoW period ended"),
             // REJECT_INVALID, "PoW-ended");
 
-    if (block.nVersion < 8) {
-        if (/*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
-            return false;
-    } else if (Params().NetworkID() != CBaseChainParams::REGTEST && pindex->nVersion > 7 && pindex->nHeight >= 10 + Params().WALLET_UPGRADE_BLOCK() + Params().COINSTAKE_MIN_DEPTH()) {
-        int end = std::max(std::min(pindex->nHeight - 9 - Params().WALLET_UPGRADE_BLOCK() - Params().COINSTAKE_MIN_DEPTH(), 10), 0); // start checking one more at a time until we can enforce on all new blocks
-        int typeCount[ALGO_COUNT] = { };
-        CBlockIndex* idx = pindex;
-        for (int i = 0; i < end; i++) { // check to make sure previous blocks aren't all same algo
-            typeCount[CBlockHeader::GetAlgo(idx->nVersion)]++;
-            if (idx->pprev)
-                idx = idx->pprev;
-            else
-                break;
-        }
-
-        if ((end == 10 && typeCount[POS] == 0) /*|| (pindex->pprev && CBlockHeader::GetAlgo(pindex->nVersion) == CBlockHeader::GetAlgo(pindex->pprev->nVersion))*/)
-            return state.DoS(100, error("%s : too many PoW blocks in a row, at least one PoS block required", __func__),
-                REJECT_INVALID, "same-type");
-        for (int i = POW_QUARK; i < ALGO_COUNT; i++) {
-            if (typeCount[i] > 4)
-                return state.DoS(100, error("%s : too many blocks of type=%i in a row, %i", __func__, i, typeCount[i]),
-                    REJECT_INVALID, "same-type");
-        }
-    }
+    if (block.nVersion < 8 && /*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
+        return false;
 
     if (block.IsProofOfStake()) {
         uint256 hashProofOfStake = 0;
@@ -4338,7 +4316,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     if (nBlockCheckTime == 0)
         nBlockCheckTime = GetTime() - (2 * 24 * 60 * 60); // check the past 2 days worth of headers
 
-    if (block.nVersion > 7 && !block.IsProofOfWork() && !block.IsProofOfStake()) //&& CBlockHeader::GetAlgo(block.nVersion) == POW_QUARK)
+    if (block.nVersion > 7 && CBlockHeader::GetAlgo(block.nVersion) == -1)
         return state.DoS(100, error("%s : block %s has an invalid type", __func__, block.GetHash().GetHex()));
 
     // Check proof of work matches claimed amount
@@ -4558,15 +4536,43 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     assert(pindexPrev);
 
-    if (block.nVersion > 7 && !CheckWork(block, pindexPrev))
-        return false;
-
     int nHeight = pindexPrev->nHeight + 1;
 
-    //if (Params().NetworkID() == CBaseChainParams::REGTEST && block.nBits != GetNextWorkRequired(pindexPrev, &block, false)) // Perhaps move to ContextualCheckBlock?
-        //return state.DoS(100, error("%s : incorrect proof of work", __func__),
-                //REJECT_INVALID, "bad-diffbits");
+    if (block.nVersion > 7) {
+        if (!CheckWork(block, pindexPrev))
+            return false;
 
+        if (Params().NetworkID() != CBaseChainParams::REGTEST && nHeight >= 10 + Params().WALLET_UPGRADE_BLOCK() + Params().COINSTAKE_MIN_DEPTH()) {
+            int end = std::max(std::min(nHeight - 9 - Params().WALLET_UPGRADE_BLOCK() - Params().COINSTAKE_MIN_DEPTH(), 10), 0); // start checking one more at a time until we can enforce on all new blocks
+            int typeCount[ALGO_COUNT] = { };
+            //int proofOfWorkCount = 0;
+            if (CBlockHeader::GetAlgo(block.nVersion) == -1)
+                return false;
+            typeCount[CBlockHeader::GetAlgo(block.nVersion)]++;
+            CBlockIndex* idx = pindexPrev;
+            for (int i = 1; i < end; i++) { // check to make sure previous blocks aren't all same algo - we start at i=1 because our new header has already been added to the count and idx is prev block
+                typeCount[CBlockHeader::GetAlgo(idx->nVersion)]++;
+                if (idx->pprev)
+                    idx = idx->pprev;
+                else
+                    break;
+            }
+
+            if ((end == 10 && typeCount[POS] == 0) /*|| (CBlockHeader::GetAlgo(block.nVersion) == CBlockHeader::GetAlgo(pindexPrev->nVersion))*/)
+                return state.DoS(100, error("%s : too many PoW blocks in a row, at least one PoS block required", __func__),
+                    REJECT_INVALID, "same-type");
+            for (int i = POW_QUARK; i < ALGO_COUNT; i++) {
+                if (typeCount[i] > 4)
+                    return state.DoS(100, error("%s : too many blocks of type=%i in a row, %i", __func__, i, typeCount[i]),
+                        REJECT_INVALID, "same-type");
+                //else if (typeCount[i] > 0)
+                    //proofOfWorkCount++;
+            }
+            //if (end == 10 && proofOfWorkCount == 0)
+                //return state.DoS(100, error("%s : too many PoS blocks in a row (%d), at least one PoW block required", __func__, typeCount[POS]),
+                    //REJECT_INVALID, "same-type");
+        }
+    }
 
     //If this is a reorg, check that it is not too deep
     int nMaxReorgDepth = GetArg("-maxreorg", Params().MaxReorganizationDepth());
@@ -4577,7 +4583,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && Params().NetworkID() != CBaseChainParams::REGTEST && block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.DoS(50, error("%s : block timestamp too old", __func__), REJECT_INVALID, "time-too-old");
 
-    if (Params().NetworkID() == CBaseChainParams::MAIN) {
+    if (Params().NetworkID() != CBaseChainParams::REGTEST) {
         // Enforce version 8 after mandatory upgrade block
         if (nHeight >= Params().WALLET_UPGRADE_BLOCK()) {
             if (block.nVersion < Params().WALLET_UPGRADE_VERSION())
