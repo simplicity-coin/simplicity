@@ -10,6 +10,7 @@
 #include "clientversion.h"
 #include "kernel.h"
 #include "main.h"
+#include "miner.h"
 #include "rpc/server.h"
 #include "sync.h"
 #include "txdb.h"
@@ -42,7 +43,7 @@ static CUpdatedBlock latestblock;
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 
-double GetDifficulty(const CBlockIndex* blockindex)
+double GetDifficulty(const CBlockIndex* blockindex, int algo)
 {
     // Floating point number that is a multiple of the minimum difficulty,
     // minimum difficulty = 1.0.
@@ -51,6 +52,11 @@ double GetDifficulty(const CBlockIndex* blockindex)
             return 1.0;
         else
             blockindex = chainActive.Tip();
+
+        if (algo < POS || algo >= ALGO_COUNT)
+            algo = nCreateBlockAlgo;
+        while (blockindex && blockindex->pprev && (CBlockHeader::GetAlgo(blockindex->nVersion) != algo))
+            blockindex = blockindex->pprev;
     }
 
     int nShift = (blockindex->nBits >> 24) & 0xff;
@@ -70,7 +76,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
     return dDiff;
 }
 
-double GetPoWKHashPM()
+/*double GetPoWHashPS(int algo = -1, int height = -1)
 {
     int nPoWInterval = 72;
     int64_t nTargetSpacingWorkMin = 30, nTargetSpacingWork = 30;
@@ -78,8 +84,14 @@ double GetPoWKHashPM()
     CBlockIndex* pindex = chainActive.Genesis();
     CBlockIndex* pindexPrevWork = chainActive.Genesis();
 
-    while (pindex) {
-        if (pindex->IsProofOfWork()) {
+    if (algo < POS || algo >= ALGO_COUNT)
+        algo = nCreateBlockAlgo;
+    if (height <= 0 || height > chainActive.Height())
+        height = chainActive.Height();
+    bool postFork = height >= Params().WALLET_UPGRADE_BLOCK();
+
+    while (pindex && pindex->nHeight <= height) {
+        if ((postFork && CBlockHeader::GetAlgo(pindex->nVersion) == algo) || (!postFork && pindex->IsProofOfWork())) {
             int64_t nActualSpacingWork = pindex->GetBlockTime() - pindexPrevWork->GetBlockTime();
             nTargetSpacingWork = ((nPoWInterval - 1) * nTargetSpacingWork + nActualSpacingWork + nActualSpacingWork) / (nPoWInterval + 1);
             nTargetSpacingWork = std::max(nTargetSpacingWork, nTargetSpacingWorkMin);
@@ -88,8 +100,8 @@ double GetPoWKHashPM()
         pindex = pindex->pnext;
     }
 
-    return (GetDifficulty() * 1024 * 4294.967296  / nTargetSpacingWork) * 60;  // 60= sec to min, 1024= standard scrypt work to scrypt^2
-}
+    return GetDifficulty(pindexPrevWork) * (postFork && algo == POW_SCRYPT_SQUARED ? 1024 : 1) * 4294967296 / nTargetSpacingWork; // 1024= standard scrypt work to scrypt^2
+}*/
 
 UniValue blockheaderToJSON(const CBlockIndex* blockindex)
 {
@@ -461,10 +473,14 @@ UniValue waitforblockheight(const UniValue& params, bool fHelp)
 
 UniValue getdifficulty(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 1)
         throw std::runtime_error(
-            "getdifficulty\n"
-            "\nReturns the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
+            "getdifficulty ( algo )\n"
+            "\nReturns the proof-of-work difficulty on an algo as a multiple of the minimum difficulty.\n"
+            "POS = 0, POW_QUARK = 1, POW_SCRYPT_SQUARED = 2.\n"
+
+            "\nArguments:\n"
+            "1. algo         (numeric, optional) Set to the number of the algo to check difficulty.\n"
 
             "\nResult:\n"
             "n.nnn       (numeric) the proof-of-work difficulty as a multiple of the minimum difficulty.\n"
@@ -472,8 +488,12 @@ UniValue getdifficulty(const UniValue& params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("getdifficulty", "") + HelpExampleRpc("getdifficulty", ""));
 
+    int algo = params.size() > 0 ? params[0].get_int() : -1;
+    if (params.size() > 0 && (algo < POS || algo >= ALGO_COUNT))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid algorithm");
+
     LOCK(cs_main);
-    return GetDifficulty();
+    return GetDifficulty(NULL, algo);
 }
 
 
@@ -791,7 +811,7 @@ UniValue gettxout(const UniValue& params, bool fHelp)
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
             "     \"addresses\" : [          (array of string) array of simplicity addresses\n"
-            "     \"simplicityaddress\"   	 	(string) simplicity address\n"
+            "     \"simplicityaddress\"         (string) simplicity address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"
@@ -1226,7 +1246,7 @@ UniValue findserial(const UniValue& params, bool fHelp)
     CBigNum bnSerial = 0;
     bnSerial.SetHex(strSerial);
     if (!bnSerial)
-	throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid serial");
+    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid serial");
 
     uint256 txid = 0;
     bool fSuccess = zerocoinDB->ReadCoinSpend(bnSerial, txid);

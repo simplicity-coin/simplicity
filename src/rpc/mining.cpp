@@ -92,7 +92,7 @@ UniValue getnetworkhashps(const UniValue& params, bool fHelp)
             HelpExampleCli("getnetworkhashps", "") + HelpExampleRpc("getnetworkhashps", ""));
 
     LOCK(cs_main);
-    return GetPoWKHashPM() * 1024 / 60; //GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
+    return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
 
 #ifdef ENABLE_WALLET
@@ -198,14 +198,14 @@ UniValue setminingalgo(const UniValue& params, bool fHelp)
             HelpExampleCli("setminingalgo", "1") +
             HelpExampleCli("setminingalgo", "2") +
             HelpExampleRpc("setminingalgo", "2"));
-    
+
     int algo = params[0].get_int();
     if (algo <= POS || algo >= ALGO_COUNT)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid algorithm");
-    
+
     LOCK(cs_main);
     nCreateBlockAlgo = algo;
-    
+
     return NullUniValue;
 }
 
@@ -311,7 +311,7 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("difficulty", (double)GetDifficulty()));
     obj.push_back(Pair("errors", GetWarnings("statusbar")));
     obj.push_back(Pair("genproclimit", (int)GetArg("-genproclimit", -1)));
-    obj.push_back(Pair("networkhashps", GetPoWKHashPM() * 1024 / 60));
+    obj.push_back(Pair("networkhashps", getnetworkhashps(params, false)));
     obj.push_back(Pair("pooledtx", (uint64_t)mempool.size()));
     obj.push_back(Pair("testnet", Params().TestnetToBeDeprecatedFieldRPC()));
     obj.push_back(Pair("chain", Params().NetworkIDString()));
@@ -636,7 +636,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
 
     UniValue superblockObjArray(UniValue::VARR);
-    if(pblock->vtx[0].vout.size() > 1) { 
+    if(pblock->vtx[0].vout.size() > 1) {
         for (const CTxOut& txout : pblock->vtx[0].vout) {
             if(txout == pblock->vtx[0].vout[0])
                 continue;

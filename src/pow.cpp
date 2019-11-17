@@ -34,7 +34,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake)
 {
     uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion > 7 ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK);
-    //if (!fProofOfStake) return bnTargetLimit.GetCompact(); // for testing
+    //if (Params().NetworkID() != CBaseChainParams::MAIN && !fProofOfStake) return bnTargetLimit.GetCompact(); // for testing
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block

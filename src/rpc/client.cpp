@@ -34,6 +34,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
         {"setgenerate", 1},
         {"setminingalgo", 0},
         {"generate", 0},
+        {"getdifficulty", 0},
         {"getnetworkhashps", 0},
         {"getnetworkhashps", 1},
         {"sendtoaddress", 1},
