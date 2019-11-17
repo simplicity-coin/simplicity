@@ -237,6 +237,20 @@ std::string BlockToString(CBlockIndex* pBlock)
         Generated = GetBlockValue(height, pBlock->IsProofOfStake(), nCoinAge) + GetTreasuryAward(height);
     }
 
+    std::string type = "";
+    int algo = block.nVersion > 7 ? CBlockHeader::GetAlgo(block.nVersion) : block.IsProofOfWork();
+    switch (algo) {
+        case POS:
+            type = "proof of stake";
+            break;
+        case POW_QUARK:
+            type = "proof of work - quark";
+            break;
+        case POW_SCRYPT_SQUARED:
+            type = "proof of work - scrypt²";
+            break;
+    }
+
     std::string BlockContentCells[] =
         {
             _("Height"), itostr(height),
@@ -249,7 +263,7 @@ std::string BlockToString(CBlockIndex* pBlock)
             _("Difficulty"), strprintf("%.4f", GetDifficulty(pBlock)),
             _("Bits"), utostr(block.nBits),
             _("Nonce"), utostr(block.nNonce),
-            _("Version"), itostr(block.nVersion),
+            _("Type"), type,
             _("Hash"), "<pre>" + block.GetHash().GetHex() + "</pre>",
             _("Merkle Root"), "<pre>" + block.hashMerkleRoot.GetHex() + "</pre>",
             // _("Hash Whole Block"), "<pre>" + block.hashWholeBlock.GetHex() + "</pre>"
