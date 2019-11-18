@@ -2095,7 +2095,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 
     // Check the header
     // treat PoW and PoS blocks the same - don't waste time on redundant PoW checks that won't catch invalid PoS blocks anyway
-    if (block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
+    if (block.GetHash() != Params().HashGenesisBlock() && block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -4320,7 +4320,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
         return state.DoS(100, error("%s : block %s has an invalid type", __func__, block.GetHash().GetHex()));
 
     // Check proof of work matches claimed amount
-    if ((fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
+    if (block.GetHash() != Params().HashGenesisBlock() && (fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
         return state.DoS(50, error("%s : proof of work failed", __func__),
             REJECT_INVALID, "high-hash");
 
@@ -4693,7 +4693,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, !fAlreadyCheckedHeader)) {
+        if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && !CheckBlockHeader(block, state, !fAlreadyCheckedHeader)) {
             LogPrintf("%s : CheckBlockHeader failed\n", __func__);
             return false;
         }
@@ -5370,7 +5370,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos* dbp)
                     }
                 }
             } catch (std::exception& e) {
-                LogPrintf("%s : Deserialize or I/O error - %s", __func__, e.what());
+                LogPrintf("%s : Deserialize or I/O error - %s\n", __func__, e.what());
             }
         }
     } catch (std::runtime_error& e) {
