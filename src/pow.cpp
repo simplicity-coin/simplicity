@@ -26,7 +26,8 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 {
-    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo))
+    bool newDiff = pindex->nTime >= 1574121600;
+    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && algo == POW_SCRYPT_SQUARED && pindex->nTime >= 1573746979 && pindex->nTime < 1574121600)))
         pindex = pindex->pprev;
     return pindex;
 }
@@ -34,7 +35,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake)
 {
     uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion > 7 ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK);
-    //if (!fProofOfStake) return bnTargetLimit.GetCompact(); // for testing
+    //if (Params().NetworkID() != CBaseChainParams::MAIN && !fProofOfStake) return bnTargetLimit.GetCompact(); // for testing
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
@@ -128,8 +129,13 @@ bool CheckProofOfWork(const CBlockHeader* pblock)
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit(pblock->nVersion > 7 ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK))
         return error("CheckProofOfWork() : nBits below minimum work");
 
+    if (CBlockHeader::GetAlgo(pblock->nVersion) == POW_SCRYPT_SQUARED && pblock->nTime >= 1573746979 && pblock->nTime < 1574121600) {
+        LogPrintf("CheckProofOfWork() : skipping block %s affected by difficulty bug\n", pblock->GetHash().GetHex());
+        return true;
+    }
+    
     // Check proof of work matches claimed amount
-    if (pblock->GetPoWHash().GetCompact() > bnTarget) {
+    if (pblock->GetPoWHash() > bnTarget) {
         if (Params().MineBlocksOnDemand())
             return false;
         else

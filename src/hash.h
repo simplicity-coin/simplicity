@@ -424,7 +424,7 @@ inline uint256 HashScryptSquared(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
     //return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
-    uint256 result = 0;
+    uint256 result = ~uint256(0);
     scryptHash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (char*)&result, 1048576);
     return result;
 }
