@@ -2159,7 +2159,7 @@ int64_t GetBlockValue(int nHeight, bool fProofOfStake, uint64_t nCoinAge)
             nSubsidy = 500 * COIN;
         else if (nHeight < Params().WALLET_UPGRADE_BLOCK())
             nSubsidy = 100 * COIN;
-        else if (nHeight < 1300000)
+        else if (nHeight < 1350000)
             nSubsidy = 10000 * COIN;
         else
             nSubsidy = 1000 * COIN;
@@ -3569,7 +3569,7 @@ void static UpdateTip(CBlockIndex* pindexNew)
     nTimeBestReceived = GetTime();
     mempool.AddTransactionsUpdated(1);
 
-    LogPrintf("UpdateTip: new best=%s  height=%d version=%d type=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%u\n",
+    LogPrintf("UpdateTip: new best=%s  height=%d version=%d type=%i  log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%u\n",
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion, chainActive.Tip()->nVersion > 7 ? CBlockHeader::GetAlgo(chainActive.Tip()->nVersion) : chainActive.Tip()->IsProofOfWork(),
         log(chainActive.Tip()->nChainWork.getdouble()) / log(2.0), (unsigned long)chainActive.Tip()->nChainTx, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         Checkpoints::GuessVerificationProgress(chainActive.Tip()), (unsigned int)pcoinsTip->GetCacheSize());
@@ -4335,7 +4335,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         //return true;
 
     const bool IsPoS = block.IsProofOfStake(); //|| (block.vtx.size() > 1 && block.vtx[1].IsCoinStake());
-    LogPrint("debug", "%s: block=%s is %s\n", __func__, block.GetHash().GetHex(), block.IsProofOfStake() ? "proof of stake" : "proof of work");
+    LogPrint("debug", "%s: block=%s is %s with type=%i\n", __func__, block.GetHash().GetHex(), block.IsProofOfStake() ? "proof of stake" : "proof of work", block.nVersion > 7 ? CBlockHeader::GetAlgo(block.nVersion) : block.IsProofOfWork());
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
