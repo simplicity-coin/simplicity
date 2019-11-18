@@ -2090,12 +2090,12 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
         return error("%s : Deserialize or I/O error - %s", __func__, e.what());
     }
 
-    if (block.nVersion < 8 && block.vtx.size() > 1 && block.vtx[1].IsCoinStake())
+    if (block.nVersion < Params().WALLET_UPGRADE_VERSION() && block.vtx.size() > 1 && block.vtx[1].IsCoinStake())
         block.fPreForkPoS = true;
 
     // Check the header
     // treat PoW and PoS blocks the same - don't waste time on redundant PoW checks that won't catch invalid PoS blocks anyway
-    if (block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
+    if (block.GetHash() != Params().HashGenesisBlock() && block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -3079,7 +3079,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // return state.DoS(100, error("ConnectBlock() : PoW period ended"),
             // REJECT_INVALID, "PoW-ended");
 
-    if (block.nVersion < 8 && /*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
+    if (block.nVersion < Params().WALLET_UPGRADE_VERSION() && /*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
         return false;
 
     if (block.IsProofOfStake()) {
@@ -3570,7 +3570,7 @@ void static UpdateTip(CBlockIndex* pindexNew)
     mempool.AddTransactionsUpdated(1);
 
     LogPrintf("UpdateTip: new best=%s  height=%d version=%d type=%i  log2_work=%.8g  tx=%lu  date=%s progress=%f  cache=%u\n",
-        chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion, chainActive.Tip()->nVersion > 7 ? CBlockHeader::GetAlgo(chainActive.Tip()->nVersion) : chainActive.Tip()->IsProofOfWork(),
+        chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion, chainActive.Tip()->nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(chainActive.Tip()->nVersion) : chainActive.Tip()->IsProofOfWork(),
         log(chainActive.Tip()->nChainWork.getdouble()) / log(2.0), (unsigned long)chainActive.Tip()->nChainTx, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
         Checkpoints::GuessVerificationProgress(chainActive.Tip()), (unsigned int)pcoinsTip->GetCacheSize());
 
@@ -4316,11 +4316,11 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     if (nBlockCheckTime == 0)
         nBlockCheckTime = GetTime() - (2 * 24 * 60 * 60); // check the past 2 days worth of headers
 
-    if (block.nVersion > 7 && CBlockHeader::GetAlgo(block.nVersion) == -1)
+    if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && CBlockHeader::GetAlgo(block.nVersion) == -1)
         return state.DoS(100, error("%s : block %s has an invalid type", __func__, block.GetHash().GetHex()));
 
     // Check proof of work matches claimed amount
-    if ((fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
+    if (block.GetHash() != Params().HashGenesisBlock() && (fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
         return state.DoS(50, error("%s : proof of work failed", __func__),
             REJECT_INVALID, "high-hash");
 
@@ -4335,7 +4335,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         //return true;
 
     const bool IsPoS = block.IsProofOfStake(); //|| (block.vtx.size() > 1 && block.vtx[1].IsCoinStake());
-    LogPrint("debug", "%s: block=%s is %s with type=%i\n", __func__, block.GetHash().GetHex(), block.IsProofOfStake() ? "proof of stake" : "proof of work", block.nVersion > 7 ? CBlockHeader::GetAlgo(block.nVersion) : block.IsProofOfWork());
+    LogPrint("debug", "%s: block=%s is %s with type=%i\n", __func__, block.GetHash().GetHex(), block.IsProofOfStake() ? "proof of stake" : "proof of work", block.nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(block.nVersion) : block.IsProofOfWork());
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
@@ -4462,7 +4462,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // TODO: Check if this is ok... blockHeight is always the tip or should we look for the prevHash and get the height?
     // int blockHeight = chainActive.Height() + 1;
     for (const CTransaction& tx : block.vtx) {
-        if (tx.nVersion < 3 && block.nVersion > 7)
+        if (tx.nVersion < 3 && block.nVersion >= Params().WALLET_UPGRADE_VERSION())
             return state.DoS(100, error("%s : Transaction %s has invalid version %d", __func__, tx.GetHash().ToString(), tx.nVersion),
                 REJECT_INVALID, "bad-txns-version");
         if (!CheckTransaction(tx, fZerocoinActive, nHeight >= Params().Zerocoin_Block_EnforceSerialRange(), state))
@@ -4538,7 +4538,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     int nHeight = pindexPrev->nHeight + 1;
 
-    if (block.nVersion > 7) {
+    if (block.nVersion >= Params().WALLET_UPGRADE_VERSION()) {
         if (!CheckWork(block, pindexPrev))
             return false;
 
@@ -4693,7 +4693,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, !fAlreadyCheckedHeader)) {
+        if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && !CheckBlockHeader(block, state, !fAlreadyCheckedHeader)) {
             LogPrintf("%s : CheckBlockHeader failed\n", __func__);
             return false;
         }
@@ -4858,7 +4858,7 @@ bool ProcessNewBlock(CValidationState& state, CNode* pfrom, CBlock* pblock, bool
     // Preliminary checks
     int64_t nStartTime = GetTimeMillis();
 
-    if (pblock->nVersion < 8 && pblock->vtx.size() > 1 && pblock->vtx[1].IsCoinStake())
+    if (pblock->nVersion < Params().WALLET_UPGRADE_VERSION() && pblock->vtx.size() > 1 && pblock->vtx[1].IsCoinStake())
         pblock->fPreForkPoS = true;
 
     // check block
@@ -5370,7 +5370,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos* dbp)
                     }
                 }
             } catch (std::exception& e) {
-                LogPrintf("%s : Deserialize or I/O error - %s", __func__, e.what());
+                LogPrintf("%s : Deserialize or I/O error - %s\n", __func__, e.what());
             }
         }
     } catch (std::runtime_error& e) {

@@ -281,7 +281,7 @@ public:
         block.nBits = nBits;
         block.nNonce = nNonce;
         //block.nAccumulatorCheckpoint = nAccumulatorCheckpoint;
-        if (nVersion < 8)
+        if (nVersion < Params().WALLET_UPGRADE_VERSION())
             block.fPreForkPoS = IsProofOfStake();
         return block;
     }

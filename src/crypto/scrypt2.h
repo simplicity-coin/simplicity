@@ -20,7 +20,7 @@ int scrypt_best_throughput();
 
 bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, unsigned char *scratchbuf);
 
-void scryptHash(const void *input, char *output, int N);
+bool scryptHash(const void *input, char *output, int N);
 extern unsigned char *scrypt_buffer_alloc(int N);
 extern "C" void scrypt_core(uint32_t *X, uint32_t *V, int N);
 extern "C" void sha256_transform(uint32_t *state, const uint32_t *block, int swap);

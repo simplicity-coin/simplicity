@@ -832,7 +832,7 @@ bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, u
     return false;
 }
 
-void scryptHash(const void *input, char *output, int N)
+bool scryptHash(const void *input, char *output, int N)
 {
     uint32_t midstate[8];
     uint32_t data[20];
@@ -840,7 +840,7 @@ void scryptHash(const void *input, char *output, int N)
 
     memset(output, 0, 32);
     if (!scratchbuf)
-        return;
+        return false;
 
     for (int i = 0; i < 20; i++)
         data[i] = be32dec(&((const uint32_t *)input)[i]);
@@ -851,4 +851,5 @@ void scryptHash(const void *input, char *output, int N)
     scrypt_N_1_1_256(data, (uint32_t*)output, midstate, scratchbuf, N);
 
     free(scratchbuf);
+    return true;
 }

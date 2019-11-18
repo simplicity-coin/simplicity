@@ -135,7 +135,7 @@ std::string CBlock::ToString() const
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
-        nVersion > 7 ? GetAlgo(nVersion) : IsProofOfWork(),
+        GetAlgo(nVersion) == -1 ? IsProofOfWork() : GetAlgo(nVersion),
         vtx.size());
     for (unsigned int i = 0; i < vtx.size(); i++)
     {

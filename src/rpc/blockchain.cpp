@@ -168,7 +168,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     if (pnext)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
 
-    result.push_back(Pair("type", blockindex->nVersion > 7 ? CBlockHeader::GetAlgo(blockindex->nVersion) : blockindex->IsProofOfWork()));
+    result.push_back(Pair("type", blockindex->nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(blockindex->nVersion) : blockindex->IsProofOfWork()));
     //result.push_back(Pair("modifier", strprintf("%016x", blockindex->nStakeModifier)));
     result.push_back(Pair("modifierV2", blockindex->nStakeModifierV2.GetHex()));
 
@@ -204,6 +204,10 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
         //stakeData.push_back(Pair("stakeModifierHeight", ((stake->IsZSPL()) ? "Not available" : std::to_string(
                 //stake->getStakeModifierHeight()))));
         result.push_back(Pair("CoinStake", stakeData));
+    } else {
+        UniValue workData(UniValue::VOBJ);
+        workData.push_back(Pair("hashProofOfWork", block.GetPoWHash().GetHex()));
+        result.push_back(Pair("Mined", workData));
     }
 
     return result;

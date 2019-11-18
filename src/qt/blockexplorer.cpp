@@ -238,7 +238,7 @@ std::string BlockToString(CBlockIndex* pBlock)
     }
 
     std::string type = "";
-    int algo = block.nVersion > 7 ? CBlockHeader::GetAlgo(block.nVersion) : block.IsProofOfWork();
+    int algo = block.nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(block.nVersion) : block.IsProofOfWork();
     switch (algo) {
         case POS:
             type = "proof of stake";
