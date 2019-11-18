@@ -26,25 +26,25 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 {
-    bool newDiff = pindex->nTime >= 1574121600;
-    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && algo == POW_SCRYPT_SQUARED && pindex->nTime >= 1573746979 && pindex->nTime < 1574121600)))
+    bool newDiff = pindex->nTime >= Params().BadScryptDiffTimeEnd();
+    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && algo == POW_SCRYPT_SQUARED && pindex->nTime < Params().BadScryptDiffTimeEnd() && pindex->nTime >= Params().BadScryptDiffTimeStart())))
         pindex = pindex->pprev;
     return pindex;
 }
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake)
 {
-    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion > 7 ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK);
+    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK);
     //if (Params().NetworkID() != CBaseChainParams::MAIN && !fProofOfStake) return bnTargetLimit.GetCompact(); // for testing
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
 
-    const CBlockIndex* pindexPrev = pblock->nVersion > 7 ? GetLastBlockIndex(pindexLast, CBlockHeader::GetAlgo(pblock->nVersion)) : GetLastBlockIndex(pindexLast, fProofOfStake);
+    const CBlockIndex* pindexPrev = pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? GetLastBlockIndex(pindexLast, CBlockHeader::GetAlgo(pblock->nVersion)) : GetLastBlockIndex(pindexLast, fProofOfStake);
     if (pindexPrev->pprev == NULL)
         return bnTargetLimit.GetCompact(); // first block
 
-    const CBlockIndex* pindexPrevPrev = pblock->nVersion > 7 ? GetLastBlockIndex(pindexPrev->pprev, CBlockHeader::GetAlgo(pblock->nVersion)) : GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
+    const CBlockIndex* pindexPrevPrev = pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? GetLastBlockIndex(pindexPrev->pprev, CBlockHeader::GetAlgo(pblock->nVersion)) : GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
     if (pindexPrevPrev->pprev == NULL)
         return bnTargetLimit.GetCompact(); // second block
 
@@ -126,10 +126,10 @@ bool CheckProofOfWork(const CBlockHeader* pblock)
     bnTarget.SetCompact(pblock->nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit(pblock->nVersion > 7 ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK))
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK))
         return error("CheckProofOfWork() : nBits below minimum work");
 
-    if (CBlockHeader::GetAlgo(pblock->nVersion) == POW_SCRYPT_SQUARED && pblock->nTime >= 1573746979 && pblock->nTime < 1574121600) {
+    if (CBlockHeader::GetAlgo(pblock->nVersion) == POW_SCRYPT_SQUARED && pblock->nTime < Params().BadScryptDiffTimeEnd() && pblock->nTime >= Params().BadScryptDiffTimeStart()) {
         LogPrintf("CheckProofOfWork() : skipping block %s affected by difficulty bug\n", pblock->GetHash().GetHex());
         return true;
     }

@@ -177,6 +177,8 @@ public:
         /** Height or Time Based Activations **/
         nMandatoryUpgradeBlock = 1030000;
         nUpgradeBlockVersion = 8; //Block headers must be this version after upgrade block
+        nBadScryptDiffTimeStart = 1573746979;
+        nBadScryptDiffTimeEnd = 1574121600;
         nModifierUpdateBlock = 0;
         nZerocoinStartHeight = 2100000000;
         //nZerocoinStartTime = 1508214600;
@@ -317,6 +319,8 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 20 * 60; // Simplicity: 20 minutes
         nTargetSpacing = 64; // Simplicity: 64 seconds
+        nBadScryptDiffTimeStart = 2100000000;
+        nBadScryptDiffTimeEnd = 2100000000;
         nMaturity = 15;
         nStakeMinDepth = 100;
         nMasternodeCountDrift = 4;
