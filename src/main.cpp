@@ -3079,7 +3079,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // return state.DoS(100, error("ConnectBlock() : PoW period ended"),
             // REJECT_INVALID, "PoW-ended");
 
-    if (block.nVersion < Params().WALLET_UPGRADE_VERSION() && /*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
+    if ((fVerifyingBlocks || fReindex || block.nVersion < Params().WALLET_UPGRADE_VERSION()) && /*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
         return false;
 
     if (block.IsProofOfStake()) {
@@ -4693,7 +4693,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return true;
         }
 
-        if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && !CheckBlockHeader(block, state, !fAlreadyCheckedHeader)) {
+        if (!CheckBlockHeader(block, state, !fAlreadyCheckedHeader && (block.nNonce != 0 || block.nVersion >= Params().WALLET_UPGRADE_VERSION()))) { //nNonce = 0 for PoS blocks
             LogPrintf("%s : CheckBlockHeader failed\n", __func__);
             return false;
         }
@@ -4886,7 +4886,7 @@ bool ProcessNewBlock(CValidationState& state, CNode* pfrom, CBlock* pblock, bool
     if (!ActivateBestChain(state, pblock, checked))
         return error("%s : ActivateBestChain failed", __func__);
 
-    LogPrintf("%s : ACCEPTED Block %ld in %ld milliseconds with size=%d\n", __func__, GetHeight(), GetTimeMillis() - nStartTime,
+    LogPrint("net", "%s : ACCEPTED Block %ld in %ld milliseconds with size=%d\n", __func__, GetHeight(), GetTimeMillis() - nStartTime,
               pblock->GetSerializeSize(SER_DISK, CLIENT_VERSION));
 
     return true;

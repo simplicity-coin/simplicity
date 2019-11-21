@@ -26,8 +26,8 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 {
-    bool newDiff = pindex->nTime >= Params().BadScryptDiffTimeEnd();
-    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && algo == POW_SCRYPT_SQUARED && pindex->nTime < Params().BadScryptDiffTimeEnd() && pindex->nTime >= Params().BadScryptDiffTimeStart())))
+    bool newDiff = algo == POW_SCRYPT_SQUARED && pindex->nTime >= Params().BadScryptDiffTimeEnd();
+    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && pindex->nTime < Params().BadScryptDiffTimeEnd() && pindex->nTime >= Params().BadScryptDiffTimeStart())))
         pindex = pindex->pprev;
     return pindex;
 }
