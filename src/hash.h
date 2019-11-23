@@ -317,10 +317,41 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 
 void BIP32Hash(const ChainCode chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64]);
 
-uint256 scrypt_salted_multiround_hash(const void* input, size_t inputlen, const void* salt, size_t saltlen, const unsigned int nRounds);
-uint256 scrypt_salted_hash(const void* input, size_t inputlen, const void* salt, size_t saltlen);
-uint256 scrypt_hash(const void* input, size_t inputlen/*, const unsigned int N=1024*/);
-uint256 scrypt_blockhash(const void* input);
+inline uint256 scrypt_hash(const void* input, size_t inputlen, const unsigned int N=1024)
+{
+    uint256 result;
+    scrypt((const char*)input, inputlen, (const char*)input, inputlen, (char*)&result, N, 1, 1, 32);
+    return result;
+}
+
+inline uint256 scrypt_salted_hash(const void* input, size_t inputlen, const void* salt, size_t saltlen)
+{
+    uint256 result;
+    scrypt((const char*)input, inputlen, (const char*)salt, saltlen, (char*)&result, 1024, 1, 1, 32);
+    return result;
+}
+
+inline uint256 scrypt_salted_multiround_hash(const void* input, size_t inputlen, const void* salt, size_t saltlen, const unsigned int nRounds)
+{
+    uint256 resultHash = scrypt_salted_hash(input, inputlen, salt, saltlen);
+    uint256 transitionalHash = resultHash;
+
+    for (unsigned int i = 1; i < nRounds; i++)
+    {
+        resultHash = scrypt_salted_hash(input, inputlen, (const void*)&transitionalHash, 32);
+        transitionalHash = resultHash;
+    }
+
+    return resultHash;
+}
+
+inline uint256 scrypt_blockhash(const void* input)
+{
+    //return scrypt_hash(input, 80);
+    uint256 result;
+    scryptHash(input, (char*)&result, 1024); //fixed length of 80
+    return result;
+}
 
 //int HMAC_SHA512_Init(HMAC_SHA512_CTX *pctx, const void *pkey, size_t len);
 //int HMAC_SHA512_Update(HMAC_SHA512_CTX *pctx, const void *pdata, size_t len);
@@ -425,12 +456,17 @@ inline uint256 HashScryptSquared(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
     //return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
-    uint256 result = ~uint256(0);
-    if (!scryptHash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (char*)&result, 1048576))
+    uint256 result;
+    if (!scryptHash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (char*)&result, 1048576)) {
         LogPrintf("Failed to generate scrypt² hash!\n");
+        return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
+    }
     return result;
 }
 
-void scrypt_hash(const char* pass, unsigned int pLen, const char* salt, unsigned int sLen, char* output, unsigned int N, unsigned int r, unsigned int p, unsigned int dkLen);
+inline void scrypt_hash(const char* pass, unsigned int pLen, const char* salt, unsigned int sLen, char* output, unsigned int N, unsigned int r, unsigned int p, unsigned int dkLen)
+{
+    scrypt(pass, pLen, salt, sLen, output, N, r, p, dkLen);
+}
 
 #endif // SIMPLICITY_HASH_H

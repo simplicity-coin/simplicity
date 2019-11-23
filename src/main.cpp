@@ -6616,7 +6616,6 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
         }
 
         if (GetBoolArg("-headerspamfilter", DEFAULT_HEADER_SPAM_FILTER) && !IsInitialBlockDownload()) {
-            LOCK(cs_main);
             CValidationState state;
             CNodeState *nodestate = State(pfrom->GetId());
             nodestate->headers.addHeaders(nFirst, nLast);

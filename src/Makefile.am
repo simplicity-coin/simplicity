@@ -329,6 +329,9 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sph_keccak.h \
   crypto/sph_skein.h \
   crypto/sph_types.h
+if BUILD_AARCH64
+  crypto_libbitcoin_crypto_a_SOURCES += crypto/scrypt-armv8.c crypto/sha2-armv8.c
+endif
 
 # libzerocoin library
 libzerocoin_libbitcoin_zerocoin_a_CPPFLAGS = $(AM_CPPFLAGS) $(BOOST_CPPFLAGS)
