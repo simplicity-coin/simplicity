@@ -246,7 +246,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x44)(0xD5)(0xBC).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x44)(0xF0)(0xA3).convert_to_container<std::vector<unsigned char> >();
         // BIP44 coin type is from https://github.com/satoshilabs/slips/blob/master/slip-0044.md
-        base58Prefixes[EXT_COIN_TYPE] = boost::assign::list_of(0x80)(0x00)(0x00)(0x77).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_COIN_TYPE] = boost::assign::list_of(0x80)(0x00)(0x01)(0xc0).convert_to_container<std::vector<unsigned char> >();
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
@@ -263,7 +263,7 @@ public:
         nBudgetCycleBlocks = 30 * 24 * 60 * 60 / nTargetSpacing; //!< Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)
         strSporkKey = "03fdfa718ec40be6ce1b5fadf36022a4f0ff2f1efc872291ffbe42af127bdd2859";
         strSporkKeyOld = "03fdfa718ec40be6ce1b5fadf36022a4f0ff2f1efc872291ffbe42af127bdd2859";
-        strObfuscationPoolDummyAddress = "D87q2gC9j6nNrnzCsg4aY6bHMLsT9nUhEw";
+        strObfuscationPoolDummyAddress = "8JLdPguDU5HJkBvjfca7vD79wXvksPvJMz";
         nStartMasternodePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
 
         /** Zerocoin */
@@ -393,7 +393,7 @@ public:
         nBudgetCycleBlocks = 24 * 6 * 60 / nTargetSpacing; //!< Ten cycles per day on testnet
         strSporkKey = "03b95000b2b06e391c058ea14d47ac3c525753c68460864f254ada5a63e27a8134";
         strSporkKeyOld = "03b95000b2b06e391c058ea14d47ac3c525753c68460864f254ada5a63e27a8134";
-        strObfuscationPoolDummyAddress = "y6S5YPwPCXi2oemSRJGitNPwPjcFJfwbED";
+        strObfuscationPoolDummyAddress = "yCQuB8kvJYRJyRFDJXrzVgVyfe2E68S8jb";
         nStartMasternodePayments = 1420837558; //Fri, 09 Jan 2015 21:05:58 GMT
         nBudget_Fee_Confirmations = 3; // Number of confirmations for the finalization fee. We have to make this very short
                                        // here because we only have a 8 block finalization window on testnet
