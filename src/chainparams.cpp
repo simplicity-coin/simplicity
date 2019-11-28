@@ -232,6 +232,9 @@ public:
         genesis.nBits = 0x1f00ffff;
         genesis.nNonce = 561379;
 
+        //uint256 hashTarget = uint256().SetCompact(genesis.nBits);
+        //assert(genesis.GetPoWHash() <= hashTarget);
+
         hashGenesisBlock = genesis.GetHash();
         assert(genesis.hashMerkleRoot == uint256("0x40bdd3d5ae84b91a71190094a82948400eb3356e87c5376b64d79509cf552d84"));
         assert(hashGenesisBlock == uint256("0xf4bbfc518aa3622dbeb8d2818a606b82c2b8b1ac2f28553ebdb6fc04d7abaccf"));
@@ -357,15 +360,18 @@ public:
         //vBurnAddresses.emplace_back("xzd3LKsihYn1CKBESTQP7EresFECXEMivk");
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        //genesis.nTime = 1454124731;
+        genesis.nTime = 1574924400;
         genesis.nBits = 0x1f00ffff;
-        genesis.nNonce = 93481;
+        genesis.nNonce = 164084;
+
+        uint256 hashTarget = uint256().SetCompact(genesis.nBits);
+        assert(genesis.GetPoWHash() <= hashTarget);
 
         hashGenesisBlock = genesis.GetHash();
         //printf("Merkle hash test: %s\n", genesis.hashMerkleRoot.ToString().c_str());
         //printf("Block hash test: %s\n", hashGenesisBlock.ToString().c_str());
         assert(genesis.hashMerkleRoot == uint256("0x40bdd3d5ae84b91a71190094a82948400eb3356e87c5376b64d79509cf552d84"));
-        assert(hashGenesisBlock == uint256("0xfcfc1b5bc930bc0a74643462617264e4f7aa39e276c637353bda6960b5726fb8"));
+        assert(hashGenesisBlock == uint256("0x000037a145d6812571b0c413d868a43146d7159056afe7a06b344e9ee0de39fc"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -374,10 +380,8 @@ public:
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 139); // Testnet simplicity addresses start with 'x' or 'y'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 19);  // Testnet simplicity script addresses start with '8' or '9'
         base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);     // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
-        // Testnet simplicity BIP32 pubkeys start with 'DRKV'
-        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x3a)(0x80)(0x61)(0xa0).convert_to_container<std::vector<unsigned char> >();
-        // Testnet simplicity BIP32 prvkeys start with 'DRKP'
-        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x3a)(0x80)(0x58)(0x37).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x05)(0x55)(0xCF)(0xB1).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x05)(0x55)(0xD4)(0x7A).convert_to_container<std::vector<unsigned char> >();
         // Testnet simplicity BIP44 coin type is '1' (All coin's testnet default)
         base58Prefixes[EXT_COIN_TYPE] = boost::assign::list_of(0x80)(0x00)(0x00)(0x01).convert_to_container<std::vector<unsigned char> >();
 
@@ -449,15 +453,27 @@ public:
         nPublicZCSpends = 350;
 
         //! Modify the regtest genesis block so the timestamp is valid for a later start.
-        genesis.nTime = 1454124731;
-        genesis.nBits = 0x207fffff;
-        genesis.nNonce = 12345;
+        genesis.nTime = 1574924400;
+        genesis.nBits = 0x1f00ffff;
+        genesis.nNonce = 164084;
+
+        uint256 hashTarget = uint256().SetCompact(genesis.nBits);
+        /*while (true) {
+            uint256 hash = genesis.GetPoWHash();
+            if (hash <= hashTarget) {
+                // Found a solution
+                printf("genesis block found\n   hash: %s\n target: %s\n  nonce: %i\n", hash.ToString().c_str(), hashTarget.ToString().c_str(), genesis.nNonce);
+                break;
+            }
+            genesis.nNonce += 1;
+        }*/
+        assert(genesis.GetPoWHash() <= hashTarget);
 
         hashGenesisBlock = genesis.GetHash();
         //printf("Merkle hash reg: %s\n", genesis.hashMerkleRoot.ToString().c_str());
         //printf("Block hash reg: %s\n", hashGenesisBlock.ToString().c_str());
         assert(genesis.hashMerkleRoot == uint256("0x40bdd3d5ae84b91a71190094a82948400eb3356e87c5376b64d79509cf552d84"));
-        assert(hashGenesisBlock == uint256("0xf38094d1d2ccb97e06248813ee887b48ee7326d68cb663ebf59eeca7a0bde2c4"));
+        assert(hashGenesisBlock == uint256("0x000037a145d6812571b0c413d868a43146d7159056afe7a06b344e9ee0de39fc"));
 
         vFixedSeeds.clear(); //! Testnet mode doesn't have any fixed seeds.
         vSeeds.clear();      //! Testnet mode doesn't have any DNS seeds.
