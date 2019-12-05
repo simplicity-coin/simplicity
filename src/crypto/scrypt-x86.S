@@ -32,7 +32,7 @@
     .section .note.GNU-stack,"",%progbits
 #endif
 
-#if defined(__i386__)
+#if defined(USE_ASM) && defined(__i386__)
 
 
 

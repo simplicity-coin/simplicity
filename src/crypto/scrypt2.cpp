@@ -567,9 +567,9 @@ static inline void PBKDF2_SHA256_128_32_8way(uint32_t *tstate,
 #define scrypt_best_throughput() 1
 #endif
 
-unsigned char *scrypt_buffer_alloc(int N)
+unsigned char *scrypt_buffer_alloc(int N, bool multiWay = true)
 {
-    return (unsigned char*)malloc((size_t)N * SCRYPT_MAX_WAYS * 128 + 63);
+    return (unsigned char*)malloc((size_t)N * (multiWay ? SCRYPT_MAX_WAYS : 1) * 128 + 63);
 }
 
 static void scrypt_N_1_1_256(const uint32_t *input,
@@ -836,7 +836,7 @@ bool scryptHash(const void *input, char *output, int N)
 {
     uint32_t midstate[8];
     uint32_t data[20];
-    unsigned char *scratchbuf = scrypt_buffer_alloc(N);
+    unsigned char *scratchbuf = scrypt_buffer_alloc(N, false);
 
     memset(output, 0, 32);
     if (!scratchbuf)
