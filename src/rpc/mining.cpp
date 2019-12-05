@@ -271,7 +271,7 @@ UniValue gethashespersec(const UniValue& params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("gethashespersec", "") + HelpExampleRpc("gethashespersec", ""));
 
-    if (GetTimeMillis() - nHPSTimerStart > 30000)
+    if (GetTimeMillis() - nHPSTimerStart > 60000)
         return (int64_t)0;
     return (int64_t)(dHashesPerMin / 60);
 }

@@ -2273,7 +2273,7 @@ _scrypt_core_3way:
     andl    $0x00000006, %eax
     cmpl    $0x00000006, %eax
     jne scrypt_core_3way_xmm
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
     /* Check for XOP support */
     movl    $0x80000001, %eax
     cpuid
@@ -5311,7 +5311,7 @@ scrypt_core_3way_avx_loop2:
     popq    %rbx
     ret
 
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
 
 
     .p2align 6
@@ -7575,7 +7575,7 @@ scrypt_core_3way_xop_loop2:
     popq    %rbp
     popq    %rbx
     ret
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 #endif /* ENABLE_AVX */
 
 

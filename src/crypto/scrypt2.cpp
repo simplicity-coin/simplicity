@@ -567,7 +567,7 @@ static inline void PBKDF2_SHA256_128_32_8way(uint32_t *tstate,
 #define scrypt_best_throughput() 1
 #endif
 
-unsigned char *scrypt_buffer_alloc(int N, bool multiWay = true)
+unsigned char *scrypt_buffer_alloc(int N, bool multiWay)
 {
     return (unsigned char*)malloc((size_t)N * (multiWay ? SCRYPT_MAX_WAYS : 1) * 128 + 63);
 }

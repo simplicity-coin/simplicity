@@ -1718,13 +1718,13 @@ _sha256_init_8way:
 #endif /* ENABLE_AVX2 */
 
 
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
 
 
 
 
 
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 
     .text
@@ -5748,7 +5748,7 @@ sha256_transform_4way_core_avx:
 #endif /* ENABLE_AVX */
 
 
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
     .text
     .p2align 6
 sha256_transform_4way_core_xop:
@@ -8462,7 +8462,7 @@ sha256_transform_4way_core_xop:
     vpxor   %xmm2, %xmm7, %xmm7
     vpaddd  %xmm6, %xmm7, %xmm7
     jmp sha256_transform_4way_finish
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 
     .data
@@ -22569,7 +22569,7 @@ sha256d_ms_4way_avx_finish:
 #endif /* ENABLE_AVX */
 
 
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
 
     .p2align 6
 sha256d_ms_4way_xop:
@@ -25489,7 +25489,7 @@ sha256d_ms_4way_xop_finish:
 #endif
     ret
 
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 
     .text
@@ -25515,7 +25515,7 @@ _sha256_use_4way:
     andl    $0x00000006, %eax
     cmpl    $0x00000006, %eax
     jne sha256_use_4way_base
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
     /* Check for XOP support */
     movl    $0x80000001, %eax
     cpuid
@@ -25526,7 +25526,7 @@ sha256_use_4way_xop:
     leaq    sha256d_ms_4way_xop(%rip), %rcx
     leaq    sha256_transform_4way_core_xop(%rip), %rdx
     jmp sha256_use_4way_done
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 sha256_use_4way_avx:
     leaq    sha256d_ms_4way_avx(%rip), %rcx
