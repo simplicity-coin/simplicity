@@ -336,8 +336,7 @@ inline uint256 scrypt_salted_multiround_hash(const void* input, size_t inputlen,
     uint256 resultHash = scrypt_salted_hash(input, inputlen, salt, saltlen);
     uint256 transitionalHash = resultHash;
 
-    for (unsigned int i = 1; i < nRounds; i++)
-    {
+    for (unsigned int i = 1; i < nRounds; i++) {
         resultHash = scrypt_salted_hash(input, inputlen, (const void*)&transitionalHash, 32);
         transitionalHash = resultHash;
     }
@@ -350,6 +349,13 @@ inline uint256 scrypt_blockhash(const void* input)
     //return scrypt_hash(input, 80);
     uint256 result;
     scryptHash(input, (char*)&result, 1024); //fixed length of 80
+    return result;
+}
+
+inline uint256 scrypt_squared_blockhash(const void* input)
+{
+    uint256 result;
+    scryptHash(input, (char*)&result, 1048576); //fixed length of 80
     return result;
 }
 
@@ -447,18 +453,22 @@ template <typename T1>
 inline uint256 HashScrypt(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
-    return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
+    uint256 result;
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1024)) {
+        LogPrintf("Falling back to original implementation to generate normal scrypt hash\n");
+        return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
+    }
+    return result;
 }
 
-/* ----------- Scrypt^2 Hash ------------------------------------------------ */
+/* ----------- Scrypt² Hash ------------------------------------------------ */
 template <typename T1>
 inline uint256 HashScryptSquared(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
-    //return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
     uint256 result;
-    if (!scryptHash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (char*)&result, 1048576)) {
-        LogPrintf("Failed to generate scrypt² hash!\n");
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1048576)) {
+        LogPrintf("Falling back to original implementation to generate scrypt² hash\n");
         return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
     }
     return result;

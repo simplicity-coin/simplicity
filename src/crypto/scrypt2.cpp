@@ -572,14 +572,14 @@ unsigned char *scrypt_buffer_alloc(int N)
     return (unsigned char*)malloc((size_t)N * SCRYPT_MAX_WAYS * 128 + 63);
 }
 
-static void scrypt_N_1_1_256(const uint32_t *input, uint32_t *output,
-    uint32_t *midstate, unsigned char *scratchpad, int N)
+static void scrypt_N_1_1_256(const uint32_t *input,
+    uint32_t *output, uint32_t *midstate, unsigned char *scratchpad, int N)
 {
     uint32_t tstate[8], ostate[8];
     uint32_t X[32] __attribute__((aligned(128)));
     uint32_t *V;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     memcpy(tstate, midstate, 32);
     HMAC_SHA256_80_init(input, tstate, ostate);
@@ -763,7 +763,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
         if (hash[i] > target[i]) {
             return false;
         }
-        if (hash[i] < target[i]) {
+        if (hash[i] <= target[i]) {
             return true;
         }
     }
@@ -781,7 +781,7 @@ bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, u
     int throughput = scrypt_best_throughput();
     int i;
 
-    for (int i = 0; i < 20; i++)
+    for (i = 0; i < 20; i++)
         pdata[i] = be32dec(&((const uint32_t *)input)[i]);
     n = pdata[19];
 

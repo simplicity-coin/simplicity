@@ -38,7 +38,7 @@ void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev, bool fProofO
     void ThreadStakeMinter();
 #endif // ENABLE_WALLET
 
-extern double dHashesPerSec;
+extern double dHashesPerMin;
 extern int64_t nHPSTimerStart;
 
 #endif // BITCOIN_MINER_H

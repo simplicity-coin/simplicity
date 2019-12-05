@@ -130,7 +130,7 @@ bool CheckProofOfWork(const CBlockHeader* pblock)
         return error("CheckProofOfWork() : nBits below minimum work");
 
     if (CBlockHeader::GetAlgo(pblock->nVersion) == POW_SCRYPT_SQUARED && pblock->nTime < Params().BadScryptDiffTimeEnd() && pblock->nTime >= Params().BadScryptDiffTimeStart()) {
-        LogPrintf("CheckProofOfWork() : skipping block %s affected by difficulty bug\n", pblock->GetHash().GetHex());
+        LogPrintf("CheckProofOfWork() : skipping block %s affected by scrypt difficulty bug\n", pblock->GetHash().GetHex());
         return true;
     }
     

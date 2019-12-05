@@ -904,7 +904,7 @@ UniValue verifychain(const UniValue& params, bool fHelp)
 }
 
 /** Implementation of IsSuperMajority with better feedback */
-static UniValue SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired)
+/*static UniValue SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired)
 {
     int nFound = 0;
     CBlockIndex* pstart = pindex;
@@ -929,7 +929,7 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     rv.push_back(Pair("enforce", SoftForkMajorityDesc(version, pindex, Params().EnforceBlockUpgradeMajority())));
     rv.push_back(Pair("reject", SoftForkMajorityDesc(version, pindex, Params().RejectBlockOutdatedMajority())));
     return rv;
-}
+}*/
 
 UniValue getblockchaininfo(const UniValue& params, bool fHelp)
 {

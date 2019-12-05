@@ -14,16 +14,17 @@
 #include "utilstrencodings.h"
 
 
-static const int SCRYPT_SCRATCHPAD_SIZE = 134218239;
+//static const int SCRYPT_SCRATCHPAD_SIZE = 134218239;
 //static const int N = 1048576;
 
 int scrypt_best_throughput();
 
-bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, unsigned char *scratchbuf);
+bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, unsigned char *scratchbuf, int N);
 
 bool scryptHash(const void *input, char *output, int N);
 extern unsigned char *scrypt_buffer_alloc(int N);
 extern "C" void scrypt_core(uint32_t *X, uint32_t *V, int N);
+void sha256_init(uint32_t *state);
 extern "C" void sha256_transform(uint32_t *state, const uint32_t *block, int swap);
 
 #if defined(__x86_64__) && !defined(ENABLE_AVX2)
@@ -61,9 +62,6 @@ extern "C" int sha256_use_4way();
 extern "C" void sha256_init_4way(uint32_t *state);
 extern "C" void sha256_transform_4way(uint32_t *state, const uint32_t *block, int swap);
 #endif
-
-/*#define bswap_32(x) ((((x) << 24) & 0xff000000u) | (((x) << 8) & 0x00ff0000u) \
-                   | (((x) >> 8) & 0x0000ff00u) | (((x) >> 24) & 0x000000ffu))*/
 
 static inline uint32_t swab32(uint32_t v)
 {

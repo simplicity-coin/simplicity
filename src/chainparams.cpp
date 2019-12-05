@@ -315,8 +315,8 @@ public:
         pchMessageStart[3] = 0xc6;
         vAlertPubKey = ParseHex("03b95000b2b06e391c058ea14d47ac3c525753c68460864f254ada5a63e27a8134");
         nDefaultPort = 21957;
-        bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 12;
-        bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 8;
+        bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 16;
+        bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 9;
         nEnforceBlockUpgradeMajority = 3780; // 70%
         nRejectBlockOutdatedMajority = 4050; // 75%
         nToCheckBlockUpgradeMajority = 5400; // 4 days (1350*4)
