@@ -222,46 +222,46 @@ static inline void scrypt_shuffle(uint32_t B[16])
     B[12] = x4; B[13] = x9; B[14] = x14; B[15] = x3;
 }
 
-static inline void scrypt_core_3way(uint32_t *B, uint32_t *V, uint32_t N)
+static inline void scrypt_core_3way(uint32_t *X, uint32_t *V, uint32_t N)
 {
     uint32_t* W = V;
 
-    scrypt_shuffle(&B[0  + 0]);
-    scrypt_shuffle(&B[16 + 0]);
-    scrypt_shuffle(&B[0 + 32]);
-    scrypt_shuffle(&B[16 + 32]);
-    scrypt_shuffle(&B[0 + 64]);
-    scrypt_shuffle(&B[16 + 64]);
+    scrypt_shuffle(&X[0  + 0]);
+    scrypt_shuffle(&X[16 + 0]);
+    scrypt_shuffle(&X[0 + 32]);
+    scrypt_shuffle(&X[16 + 32]);
+    scrypt_shuffle(&X[0 + 64]);
+    scrypt_shuffle(&X[16 + 64]);
 
     uint32x4x4_t q_a, q_b, q_c, q_tmp;
     uint32x4x4_t ba_a, bb_a, bc_a, ba_b, bb_b, bc_b;
 
-    ba_a.val[0] = vld1q_u32(&B[( 0) / 4]);
-    ba_a.val[1] = vld1q_u32(&B[(16) / 4]);
-    ba_a.val[2] = vld1q_u32(&B[(32) / 4]);
-    ba_a.val[3] = vld1q_u32(&B[(48) / 4]);
-    ba_b.val[0] = vld1q_u32(&B[(0 + 64 + 0) / 4]);
-    ba_b.val[1] = vld1q_u32(&B[(0 + 64 + 16) / 4]);
-    ba_b.val[2] = vld1q_u32(&B[(0 + 64 + 32) / 4]);
-    ba_b.val[3] = vld1q_u32(&B[(0 + 64 + 48) / 4]);
+    ba_a.val[0] = vld1q_u32(&X[( 0) / 4]);
+    ba_a.val[1] = vld1q_u32(&X[(16) / 4]);
+    ba_a.val[2] = vld1q_u32(&X[(32) / 4]);
+    ba_a.val[3] = vld1q_u32(&X[(48) / 4]);
+    ba_b.val[0] = vld1q_u32(&X[(0 + 64 + 0) / 4]);
+    ba_b.val[1] = vld1q_u32(&X[(0 + 64 + 16) / 4]);
+    ba_b.val[2] = vld1q_u32(&X[(0 + 64 + 32) / 4]);
+    ba_b.val[3] = vld1q_u32(&X[(0 + 64 + 48) / 4]);
 
-    bb_a.val[0] = vld1q_u32(&B[(128 +  0) / 4]);
-    bb_a.val[1] = vld1q_u32(&B[(128 + 16) / 4]);
-    bb_a.val[2] = vld1q_u32(&B[(128 + 32) / 4]);
-    bb_a.val[3] = vld1q_u32(&B[(128 + 48) / 4]);
-    bb_b.val[0] = vld1q_u32(&B[(128 + 64 + 0) / 4]);
-    bb_b.val[1] = vld1q_u32(&B[(128 + 64 + 16) / 4]);
-    bb_b.val[2] = vld1q_u32(&B[(128 + 64 + 32) / 4]);
-    bb_b.val[3] = vld1q_u32(&B[(128 + 64 + 48) / 4]);
+    bb_a.val[0] = vld1q_u32(&X[(128 +  0) / 4]);
+    bb_a.val[1] = vld1q_u32(&X[(128 + 16) / 4]);
+    bb_a.val[2] = vld1q_u32(&X[(128 + 32) / 4]);
+    bb_a.val[3] = vld1q_u32(&X[(128 + 48) / 4]);
+    bb_b.val[0] = vld1q_u32(&X[(128 + 64 + 0) / 4]);
+    bb_b.val[1] = vld1q_u32(&X[(128 + 64 + 16) / 4]);
+    bb_b.val[2] = vld1q_u32(&X[(128 + 64 + 32) / 4]);
+    bb_b.val[3] = vld1q_u32(&X[(128 + 64 + 48) / 4]);
 
-    bc_a.val[0] = vld1q_u32(&B[(256 + 0) / 4]);
-    bc_a.val[1] = vld1q_u32(&B[(256 + 16) / 4]);
-    bc_a.val[2] = vld1q_u32(&B[(256 + 32) / 4]);
-    bc_a.val[3] = vld1q_u32(&B[(256 + 48) / 4]);
-    bc_b.val[0] = vld1q_u32(&B[(256 + 64 + 0) / 4]);
-    bc_b.val[1] = vld1q_u32(&B[(256 + 64 + 16) / 4]);
-    bc_b.val[2] = vld1q_u32(&B[(256 + 64 + 32) / 4]);
-    bc_b.val[3] = vld1q_u32(&B[(256 + 64 + 48) / 4]);
+    bc_a.val[0] = vld1q_u32(&X[(256 + 0) / 4]);
+    bc_a.val[1] = vld1q_u32(&X[(256 + 16) / 4]);
+    bc_a.val[2] = vld1q_u32(&X[(256 + 32) / 4]);
+    bc_a.val[3] = vld1q_u32(&X[(256 + 48) / 4]);
+    bc_b.val[0] = vld1q_u32(&X[(256 + 64 + 0) / 4]);
+    bc_b.val[1] = vld1q_u32(&X[(256 + 64 + 16) / 4]);
+    bc_b.val[2] = vld1q_u32(&X[(256 + 64 + 32) / 4]);
+    bc_b.val[3] = vld1q_u32(&X[(256 + 64 + 48) / 4]);
 
     // prep
 
@@ -1176,38 +1176,38 @@ static inline void scrypt_core_3way(uint32_t *B, uint32_t *V, uint32_t N)
         x.val[3] = vld1q_u32(&W[one + 12]);
     }
 
-    vst1q_u32(&B[0],       ba_a.val[0]);
-    vst1q_u32(&B[4],       ba_a.val[1]);
-    vst1q_u32(&B[8],       ba_a.val[2]);
-    vst1q_u32(&B[12],      ba_a.val[3]);
-    vst1q_u32(&B[16 + 0],  ba_b.val[0]);
-    vst1q_u32(&B[16 + 4],  ba_b.val[1]);
-    vst1q_u32(&B[16 + 8],  ba_b.val[2]);
-    vst1q_u32(&B[16 + 12], ba_b.val[3]);
+    vst1q_u32(&X[0],       ba_a.val[0]);
+    vst1q_u32(&X[4],       ba_a.val[1]);
+    vst1q_u32(&X[8],       ba_a.val[2]);
+    vst1q_u32(&X[12],      ba_a.val[3]);
+    vst1q_u32(&X[16 + 0],  ba_b.val[0]);
+    vst1q_u32(&X[16 + 4],  ba_b.val[1]);
+    vst1q_u32(&X[16 + 8],  ba_b.val[2]);
+    vst1q_u32(&X[16 + 12], ba_b.val[3]);
 
-    vst1q_u32(&B[32 + 0],       bb_a.val[0]);
-    vst1q_u32(&B[32 + 4],       bb_a.val[1]);
-    vst1q_u32(&B[32 + 8],       bb_a.val[2]);
-    vst1q_u32(&B[32 + 12],      bb_a.val[3]);
-    vst1q_u32(&B[32 + 16 + 0],  bb_b.val[0]);
-    vst1q_u32(&B[32 + 16 + 4],  bb_b.val[1]);
-    vst1q_u32(&B[32 + 16 + 8],  bb_b.val[2]);
-    vst1q_u32(&B[32 + 16 + 12], bb_b.val[3]);
+    vst1q_u32(&X[32 + 0],       bb_a.val[0]);
+    vst1q_u32(&X[32 + 4],       bb_a.val[1]);
+    vst1q_u32(&X[32 + 8],       bb_a.val[2]);
+    vst1q_u32(&X[32 + 12],      bb_a.val[3]);
+    vst1q_u32(&X[32 + 16 + 0],  bb_b.val[0]);
+    vst1q_u32(&X[32 + 16 + 4],  bb_b.val[1]);
+    vst1q_u32(&X[32 + 16 + 8],  bb_b.val[2]);
+    vst1q_u32(&X[32 + 16 + 12], bb_b.val[3]);
 
-    vst1q_u32(&B[64 + 0],       bc_a.val[0]);
-    vst1q_u32(&B[64 + 4],       bc_a.val[1]);
-    vst1q_u32(&B[64 + 8],       bc_a.val[2]);
-    vst1q_u32(&B[64 + 12],      bc_a.val[3]);
-    vst1q_u32(&B[64 + 16 + 0],  bc_b.val[0]);
-    vst1q_u32(&B[64 + 16 + 4],  bc_b.val[1]);
-    vst1q_u32(&B[64 + 16 + 8],  bc_b.val[2]);
-    vst1q_u32(&B[64 + 16 + 12], bc_b.val[3]);
+    vst1q_u32(&X[64 + 0],       bc_a.val[0]);
+    vst1q_u32(&X[64 + 4],       bc_a.val[1]);
+    vst1q_u32(&X[64 + 8],       bc_a.val[2]);
+    vst1q_u32(&X[64 + 12],      bc_a.val[3]);
+    vst1q_u32(&X[64 + 16 + 0],  bc_b.val[0]);
+    vst1q_u32(&X[64 + 16 + 4],  bc_b.val[1]);
+    vst1q_u32(&X[64 + 16 + 8],  bc_b.val[2]);
+    vst1q_u32(&X[64 + 16 + 12], bc_b.val[3]);
 
-    scrypt_shuffle(&B[0  + 0]);
-    scrypt_shuffle(&B[16 + 0]);
-    scrypt_shuffle(&B[0 + 32]);
-    scrypt_shuffle(&B[16 + 32]);
-    scrypt_shuffle(&B[0 + 64]);
-    scrypt_shuffle(&B[16 + 64]);
+    scrypt_shuffle(&X[0  + 0]);
+    scrypt_shuffle(&X[16 + 0]);
+    scrypt_shuffle(&X[0 + 32]);
+    scrypt_shuffle(&X[16 + 32]);
+    scrypt_shuffle(&X[0 + 64]);
+    scrypt_shuffle(&X[16 + 64]);
 }
 #endif
