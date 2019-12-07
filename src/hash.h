@@ -24,7 +24,7 @@
 #include "crypto/sph_skein.h"
 #include "crypto/sha512.h"
 #include "crypto/scrypt.h"
-#include "crypto/scrypt2.h"
+#include "crypto/scrypt_opt.h"
 
 #include <iomanip>
 #include <openssl/sha.h>

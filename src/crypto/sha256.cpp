@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "crypto/sha256.h"
-#include "crypto/scrypt2.h"
+#include "crypto/scrypt_opt.h"
 
 #include "crypto/common.h"
 

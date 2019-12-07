@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SCRYPT2_H
-#define SCRYPT2_H
+#ifndef SCRYPT_OPT_H
+#define SCRYPT_OPT_H
 
 #if defined HAVE_CONFIG_H
 #include "config/simplicity-config.h"
