@@ -32,6 +32,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdio.h>
+
+static bool HAVE_AVX2 = false;
+
+#if defined(__x86_64__)
+static inline void __attribute__((constructor)) check_avx2()
+{
+    int a, b, c, d, AVX_mask = (1<<28) | (1<<26) | (1<<27);
+    asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(1), "c"(0)); //avx
+    if ((c & AVX_mask) == AVX_mask) {
+        printf("Have AVX\n");
+    } else {
+        printf("Do not have AVX\n");
+    }
+
+    asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(7), "c"(0)); //avx2
+    if (b & (1<<5)) {
+        HAVE_AVX2 = true;
+        printf("Have AVX2\n");
+    } else {
+        printf("Do not have AVX2\n");
+    }
+}
+#endif
 
 static const uint32_t sha256_h[8] = {
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
@@ -44,7 +68,6 @@ void sha256_init(uint32_t *state)
 }
 
 #if defined(__i386__)
-
 static const uint32_t sha256_k[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -564,12 +587,12 @@ static inline void PBKDF2_SHA256_128_32_8way(uint32_t *tstate,
 
 #ifndef SCRYPT_MAX_WAYS
 #define SCRYPT_MAX_WAYS 1
-#define scrypt_best_throughput() 1
+#define SCRYPT_BEST_THROUGHPUT 1
 #endif
 
 unsigned char *scrypt_buffer_alloc(int N, bool multiWay)
 {
-    return (unsigned char*)malloc((size_t)N * (multiWay ? SCRYPT_MAX_WAYS : 1) * 128 + 63);
+    return (unsigned char*)malloc((size_t)N * (multiWay ? (HAVE_AVX2 ? 2 * SCRYPT_MAX_WAYS : SCRYPT_MAX_WAYS) : 1) * 128 + 63);
 }
 
 static void scrypt_N_1_1_256(const uint32_t *input,
@@ -774,11 +797,11 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, unsigned char *scratchbuf, int N)
 {
     uint32_t pdata[20];
-    uint32_t data[SCRYPT_MAX_WAYS * 20];
-    uint32_t dhash[SCRYPT_MAX_WAYS * 8];
+    uint32_t data[(2 * SCRYPT_MAX_WAYS) * 20];
+    uint32_t dhash[(2 * SCRYPT_MAX_WAYS) * 8];
     uint32_t midstate[8];
     uint32_t n;
-    int throughput = scrypt_best_throughput();
+    int throughput = (HAVE_AVX2 ? 2 * SCRYPT_BEST_THROUGHPUT : SCRYPT_BEST_THROUGHPUT);
     int i;
 
     for (i = 0; i < 20; i++)

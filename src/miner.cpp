@@ -766,9 +766,9 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                 unsigned int nHashesDone = 0;
 
                 if (nCreateBlockAlgo == POW_SCRYPT_SQUARED) {
+                    unsigned int runs = 0;
                     while (true) {
                         int nHashes = 0;
-                        unsigned int runs = 0;
                         if (scrypt_N_1_1_256_multi(BEGIN(pblock->nVersion), hashTarget, &nHashes, scratchbuf, 1048576)) {
                             // Found a solution
                             SetThreadPriority(THREAD_PRIORITY_NORMAL);
@@ -791,7 +791,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                         runs++;
                     }
                 } else {
-                uint256 hash;
+                    uint256 hash;
                     while (true) {
                         hash = pblock->GetPoWHash();
                         if (hash <= hashTarget) {
@@ -832,11 +832,11 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                             dHashesPerMin = 60000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
                             nHPSTimerStart = GetTimeMillis();
                             nHashCounter = 0;
-                            static int64_t nLogTime;
-                            if (GetTime() - nLogTime > 30) {
-                                nLogTime = GetTime();
+                            //static int64_t nLogTime;
+                            //if (GetTime() - nLogTime > 300) {
+                                //nLogTime = GetTime();
                                 LogPrintf("Total local hashrate %6.0f hashes/min\n", dHashesPerMin);
-                            }
+                            //}
                         }
                     }
                 }
@@ -863,8 +863,8 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
         }
     } catch (boost::thread_interrupted) {
         free(scratchbuf);
-        LogPrintf("SimplicityMiner terminated\n");
-        throw;
+        //LogPrintf("SimplicityMiner terminated\n");
+        throw boost::thread_interrupted();
     }
 }
 

@@ -454,7 +454,7 @@ inline uint256 HashScrypt(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
     uint256 result;
-    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1024)) {
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1024) || result == uint256(0)) {
         LogPrintf("Falling back to original implementation to generate normal scrypt hash\n");
         return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
     }
@@ -467,7 +467,7 @@ inline uint256 HashScryptSquared(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
     uint256 result;
-    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1048576)) {
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1048576) || result == uint256(0)) {
         LogPrintf("Falling back to original implementation to generate scrypt² hash\n");
         return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
     }

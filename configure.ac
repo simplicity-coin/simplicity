@@ -51,8 +51,6 @@ fi
 AM_PROG_AS
 AC_PROG_CXX
 
-build_aarch64=no
-
 dnl By default, libtool for mingw refuses to link static libs into a dll for
 dnl fear of mixing pic/non-pic objects, and import/export complications. Since
 dnl we have those under control, re-enable that functionality.
@@ -60,18 +58,11 @@ case $host in
   *mingw*)
      lt_cv_deplibs_check_method="pass_all"
   ;;
-  *aarch64*)
-     build_aarch64=yes
-     CFLAGS="$CFLAGS -march=armv8.1-a+crypto"
-     AC_DEFINE(BUILD_AARCH64, 1, [Define this symbol to build armv8 assembly routines])
-  ;;
 esac
 dnl Require C++11 compiler (no GNU extensions)
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory], [nodefault])
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
-
-AM_CONDITIONAL([BUILD_AARCH64],[test x$build_aarch64 = xyes])
 
 dnl Unless the user specified OBJCXX, force it to be the same as CXX. This ensures
 dnl that we get the same -std flags for both.
