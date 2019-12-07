@@ -832,11 +832,11 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                             dHashesPerMin = 60000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
                             nHPSTimerStart = GetTimeMillis();
                             nHashCounter = 0;
-                            //static int64_t nLogTime;
-                            //if (GetTime() - nLogTime > 300) {
-                                //nLogTime = GetTime();
-                                LogPrintf("Total local hashrate %6.0f hashes/min\n", dHashesPerMin);
-                            //}
+                            static int64_t nLogTime;
+                            if (GetTime() - nLogTime > 120) {
+                                nLogTime = GetTime();
+                                LogPrintf("Total local hashrate %6.1f khash/min\n", dHashesPerMin/1000.0);
+                            }
                         }
                     }
                 }

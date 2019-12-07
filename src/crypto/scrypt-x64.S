@@ -38,7 +38,7 @@
     .section .note.GNU-stack,"",%progbits
 #endif
 
-#if defined(USE_ASM) && defined(__x86_64__)
+#if /*defined(USE_ASM) &&*/ defined(__x86_64__)
 
     .text
     .p2align 6

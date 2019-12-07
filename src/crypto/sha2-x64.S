@@ -15,7 +15,7 @@
     .section .note.GNU-stack,"",%progbits
 #endif
 
-#if defined(USE_ASM) && defined(__x86_64__)
+#if /*defined(USE_ASM) &&*/ defined(__x86_64__)
 
     .data
     .p2align 4
