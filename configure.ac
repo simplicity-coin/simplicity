@@ -58,6 +58,9 @@ case $host in
   *mingw*)
      lt_cv_deplibs_check_method="pass_all"
   ;;
+  *aarch64*)
+     CFLAGS="$CFLAGS -march=armv8.1-a+crypto"
+  ;;
 esac
 dnl Require C++11 compiler (no GNU extensions)
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory], [nodefault])
