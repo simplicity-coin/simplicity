@@ -222,7 +222,7 @@ static inline void scrypt_shuffle(uint32_t B[16])
     B[12] = x4; B[13] = x9; B[14] = x14; B[15] = x3;
 }
 
-static inline void scrypt_core_3way(uint32_t *X, uint32_t *V, int N)
+void scrypt_core_3way(uint32_t *X, uint32_t *V, int N)
 {
     uint32_t* W = V;
 

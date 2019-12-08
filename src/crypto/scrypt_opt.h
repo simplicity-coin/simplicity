@@ -41,12 +41,6 @@ extern "C" void scrypt_core_3way(uint32_t *X, uint32_t *V, int N);
 #endif
 
 #if defined(__x86_64__) && defined(ENABLE_AVX2)
-//#define SCRYPT_MAX_WAYS 24
-#define HAVE_SCRYPT_6WAY 1
-//#define HAVE_SHA256_4WAY 1
-#define HAVE_SHA256_8WAY 1
-//#define SCRYPT_BEST_THROUGHPUT 6
-
 #define SCRYPT_MAX_WAYS 12
 #define HAVE_SCRYPT_3WAY 1
 #define HAVE_SHA256_4WAY 1
@@ -56,6 +50,11 @@ extern "C" void sha256_init_4way(uint32_t *state);
 extern "C" void sha256_transform_4way(uint32_t *state, const uint32_t *block, int swap);
 extern "C" void scrypt_core_3way(uint32_t *X, uint32_t *V, int N);
 
+//#define SCRYPT_MAX_WAYS 24
+#define HAVE_SCRYPT_6WAY 1
+//#define HAVE_SHA256_4WAY 1
+#define HAVE_SHA256_8WAY 1
+//#define SCRYPT_BEST_THROUGHPUT 6
 extern "C" int sha256_use_8way();
 extern "C" void sha256_init_8way(uint32_t *state);
 extern "C" void sha256_transform_8way(uint32_t *state, const uint32_t *block, int swap);
