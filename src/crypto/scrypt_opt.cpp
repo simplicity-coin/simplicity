@@ -55,6 +55,11 @@ static inline void __attribute__((constructor)) check_avx2()
         printf("Do not have AVX2\n");
     }
 }
+#elif defined(__ARM_NEON)
+static inline void __attribute__((constructor)) display_neon()
+{
+    printf("Have NEON\n");
+}
 #endif
 
 static const uint32_t sha256_h[8] = {
@@ -624,7 +629,7 @@ static void scrypt_N_1_1_256_4way(const uint32_t *input,
     uint32_t *V;
     int i, k;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     for (i = 0; i < 20; i++)
         for (k = 0; k < 4; k++)
@@ -660,7 +665,7 @@ static void scrypt_N_1_1_256_3way(const uint32_t *input,
     uint32_t X[3 * 32] __attribute__((aligned(64)));
     uint32_t *V;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     memcpy(tstate +  0, midstate, 32);
     memcpy(tstate +  8, midstate, 32);
@@ -690,7 +695,7 @@ static void scrypt_N_1_1_256_12way(const uint32_t *input,
     uint32_t *V;
     int i, j, k;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     for (j = 0; j < 3; j++)
         for (i = 0; i < 20; i++)
@@ -741,7 +746,7 @@ static void scrypt_N_1_1_256_24way(const uint32_t *input,
     uint32_t *V;
     int i, j, k;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     for (j = 0; j < 3; j++)
         for (i = 0; i < 20; i++)
