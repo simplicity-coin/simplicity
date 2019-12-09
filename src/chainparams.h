@@ -137,7 +137,7 @@ public:
     /** Height or Time Based Activations **/
     int ModifierUpgradeBlock() const { return nModifierUpdateBlock; }
     int WALLET_UPGRADE_BLOCK() const { return nMandatoryUpgradeBlock; }
-    int WALLET_UPGRADE_VERSION() const { return nUpgradeBlockVersion; }
+    uint32_t WALLET_UPGRADE_VERSION() const { return nUpgradeBlockVersion; }
     uint32_t BadScryptDiffTimeStart() const { return nBadScryptDiffTimeStart; }
     uint32_t BadScryptDiffTimeEnd() const { return nBadScryptDiffTimeEnd; }
     int Zerocoin_StartHeight() const { return nZerocoinStartHeight; }
@@ -175,7 +175,7 @@ protected:
     int64_t nTargetTimespan;
     int64_t nTargetSpacing;
     int nMandatoryUpgradeBlock;
-    int nUpgradeBlockVersion;
+    uint32_t nUpgradeBlockVersion;
     uint32_t nBadScryptDiffTimeStart;
     uint32_t nBadScryptDiffTimeEnd;
     int nMasternodeCountDrift;

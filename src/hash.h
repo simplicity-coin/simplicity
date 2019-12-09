@@ -22,6 +22,7 @@
 #include "crypto/sph_jh.h"
 #include "crypto/sph_keccak.h"
 #include "crypto/sph_skein.h"
+#include "crypto/sha1.h"
 #include "crypto/sha512.h"
 #include "crypto/scrypt.h"
 #include "crypto/scrypt_opt.h"
@@ -57,6 +58,34 @@ public:
     }
 
     CHash256& Reset()
+    {
+        sha.Reset();
+        return *this;
+    }
+};
+
+class CHash1
+{
+private:
+    CSHA1 sha;
+
+public:
+    static const size_t OUTPUT_SIZE = CSHA1::OUTPUT_SIZE;
+
+    void Finalize(unsigned char hash[OUTPUT_SIZE])
+    {
+        unsigned char buf[CSHA1::OUTPUT_SIZE];
+        sha.Finalize(buf);
+        sha.Reset().Write(buf, CSHA1::OUTPUT_SIZE).Finalize(hash);
+    }
+
+    CHash1& Write(const unsigned char* data, size_t len)
+    {
+        sha.Write(data, len);
+        return *this;
+    }
+
+    CHash1& Reset()
     {
         sha.Reset();
         return *this;
@@ -184,12 +213,34 @@ inline uint512 Hash512(const T1 pbegin, const T1 pend)
     CHash512().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
     return result;
 }
+
+/** Compute the 512-bit hash of the concatenation of two objects. */
 template <typename T1, typename T2>
 inline uint512 Hash512(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end)
 {
     static const unsigned char pblank[1] = {};
     uint512 result;
     CHash512().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
+    return result;
+}
+
+/** Compute the 160-bit hash of an object. */
+template <typename T1>
+inline uint256 Hash1(const T1 pbegin, const T1 pend)
+{
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash1().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
+    return result;
+}
+
+/** Compute the 160-bit hash of the concatenation of two objects. */
+template <typename T1, typename T2>
+inline uint256 Hash1(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end)
+{
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash1().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -253,7 +304,7 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2
     return result;
 }
 
-/** Compute the 160-bit hash an object. */
+/** Compute the 160-bit hash of an object. */
 template <typename T1>
 inline uint160 Hash160(const T1 pbegin, const T1 pend)
 {

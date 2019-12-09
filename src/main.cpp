@@ -3582,14 +3582,13 @@ void static UpdateTip(CBlockIndex* pindexNew)
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
         for (int i = 0; i < 100 && pindex != NULL; i++) {
-            if (pindex->nVersion > ALGO_POW_SCRYPT_SQUARED)
+            if (pindex->nVersion > (uint32_t)ALGO_POW_SCRYPT_SQUARED)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            LogPrintf("%s: %d of last 100 blocks above version %d\n", __func__, nUpgraded, ALGO_POW_SCRYPT_SQUARED);
-        if (nUpgraded > 100/2)
-        {
+            LogPrintf("%s: %i of last 100 blocks above version %u\n", __func__, nUpgraded, ALGO_POW_SCRYPT_SQUARED);
+        if (nUpgraded > 100/2) {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
@@ -4616,7 +4615,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.DoS(0, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
     // Reject block.nVersion=1, ..., CURRENT_VERSION-1 blocks when 95% (75% on testnet) of the network has upgraded:
-    for (int version = 2; version <= CBlockHeader::CURRENT_VERSION; version++) {
+    for (unsigned int version = 2; version <= CBlockHeader::CURRENT_VERSION; version++) {
         if (block.nVersion < version && CBlockIndex::IsSuperMajority(version, pindexPrev, Params().RejectBlockOutdatedMajority())) {
             return state.Invalid(error("%s : rejected nVersion=%d block", __func__, block.nVersion), REJECT_OBSOLETE, "bad-version");
         }
@@ -4792,7 +4791,7 @@ static bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** pp
     return true;
 }
 
-bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
+bool CBlockIndex::IsSuperMajority(unsigned int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
 {
     unsigned int nToCheck = Params().ToCheckBlockUpgradeMajority();
     unsigned int nFound = 0;
