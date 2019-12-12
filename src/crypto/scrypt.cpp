@@ -364,23 +364,27 @@ void scrypt(const char* pass, unsigned int pLen, const char* salt, unsigned int 
 {
     //containers
     void* V0 = malloc(128 * r * N + 63);
-    //void* XY0 = malloc(256 * r + 64 + 63);
     void* B1 = malloc(128 * r * p + 63);
     uint8_t* B = (uint8_t *)(((uintptr_t)(B1) + 63) & ~(uintptr_t)(63));
     uint32_t* V = (uint32_t *)(((uintptr_t)(V0) + 63) & ~(uintptr_t)(63));
-    //uint32_t* XY = (uint32_t *)(((uintptr_t)(XY0) + 63) & ~(uintptr_t)(63));
 
     PBKDF2_SHA256((const uint8_t *)pass, pLen, (const uint8_t *)salt, sLen, 1, B, p * 128 * r);
 
-    /*for(unsigned int i = 0; i < p; i++)
-    {
-        SMix(&B[i * 128 * r], r, N, V, XY);
-    }*/
-    scrypt_core((uint32_t*)B, V, N);
+    if (r == 1 && p == 1) {
+        scrypt_core((uint32_t*)B, V, N);
+    } else {
+        void* XY0 = malloc(256 * r + 64 + 63);
+        uint32_t* XY = (uint32_t *)(((uintptr_t)(XY0) + 63) & ~(uintptr_t)(63));
+
+        for (unsigned int i = 0; i < p; i++) {
+            SMix(&B[i * 128 * r], r, N, V, XY);
+        }
+
+        free(XY0);
+    }
 
     PBKDF2_SHA256((const uint8_t *)pass, pLen, B, p * 128 * r, 1, (uint8_t *)output, dkLen);
 
     free(V0);
-    //free(XY0);
     free(B1);
 }
