@@ -71,11 +71,12 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     (700000, uint256("2f852dfbc9b767905400c0e706ff63eca8d5e4090d4d49f873f9be1a754cc243"))
     (950000, uint256("0cbb4dfac570e6cbf7aa10b3f8a138b3dda3e908ab78e301f12354731bbce560"))
     (1030000, uint256("6435fc65c4b7dc50bf254124884d7787c99451b2fe8b604c5a8435849beba1f5"))
-    (1040000, uint256("a8212fbda825a42ecd3a0d1251437626fbde53afc1ea4eea76d05b4898718a0f"));
+    (1040000, uint256("a8212fbda825a42ecd3a0d1251437626fbde53afc1ea4eea76d05b4898718a0f"))
+    (1050000, uint256("9ab97fa25881e95b4c22fb7515d90738054a43231231acf8d5fc3be581591192"));
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
-    1574635768, // * UNIX timestamp of last checkpoint block
-    1726548,    // * total number of transactions between genesis and last checkpoint
+    1575775743, // * UNIX timestamp of last checkpoint block
+    1743384,    // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     2000        // * estimated number of transactions per day after checkpoint
 };
@@ -315,8 +316,8 @@ public:
         pchMessageStart[3] = 0xc6;
         vAlertPubKey = ParseHex("03b95000b2b06e391c058ea14d47ac3c525753c68460864f254ada5a63e27a8134");
         nDefaultPort = 21957;
-        bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 12;
-        bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 8;
+        bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 16;
+        bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 9;
         nEnforceBlockUpgradeMajority = 3780; // 70%
         nRejectBlockOutdatedMajority = 4050; // 75%
         nToCheckBlockUpgradeMajority = 5400; // 4 days (1350*4)

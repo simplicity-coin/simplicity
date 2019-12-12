@@ -22,9 +22,10 @@
 #include "crypto/sph_jh.h"
 #include "crypto/sph_keccak.h"
 #include "crypto/sph_skein.h"
+#include "crypto/sha1.h"
 #include "crypto/sha512.h"
 #include "crypto/scrypt.h"
-#include "crypto/scrypt2.h"
+#include "crypto/scrypt_opt.h"
 
 #include <iomanip>
 #include <openssl/sha.h>
@@ -57,6 +58,34 @@ public:
     }
 
     CHash256& Reset()
+    {
+        sha.Reset();
+        return *this;
+    }
+};
+
+class CHash1
+{
+private:
+    CSHA1 sha;
+
+public:
+    static const size_t OUTPUT_SIZE = CSHA1::OUTPUT_SIZE;
+
+    void Finalize(unsigned char hash[OUTPUT_SIZE])
+    {
+        unsigned char buf[CSHA1::OUTPUT_SIZE];
+        sha.Finalize(buf);
+        sha.Reset().Write(buf, CSHA1::OUTPUT_SIZE).Finalize(hash);
+    }
+
+    CHash1& Write(const unsigned char* data, size_t len)
+    {
+        sha.Write(data, len);
+        return *this;
+    }
+
+    CHash1& Reset()
     {
         sha.Reset();
         return *this;
@@ -184,12 +213,34 @@ inline uint512 Hash512(const T1 pbegin, const T1 pend)
     CHash512().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
     return result;
 }
+
+/** Compute the 512-bit hash of the concatenation of two objects. */
 template <typename T1, typename T2>
 inline uint512 Hash512(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end)
 {
     static const unsigned char pblank[1] = {};
     uint512 result;
     CHash512().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
+    return result;
+}
+
+/** Compute the 160-bit hash of an object. */
+template <typename T1>
+inline uint256 Hash1(const T1 pbegin, const T1 pend)
+{
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash1().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
+    return result;
+}
+
+/** Compute the 160-bit hash of the concatenation of two objects. */
+template <typename T1, typename T2>
+inline uint256 Hash1(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end)
+{
+    static const unsigned char pblank[1] = {};
+    uint256 result;
+    CHash1().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -253,7 +304,7 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2
     return result;
 }
 
-/** Compute the 160-bit hash an object. */
+/** Compute the 160-bit hash of an object. */
 template <typename T1>
 inline uint160 Hash160(const T1 pbegin, const T1 pend)
 {
@@ -336,8 +387,7 @@ inline uint256 scrypt_salted_multiround_hash(const void* input, size_t inputlen,
     uint256 resultHash = scrypt_salted_hash(input, inputlen, salt, saltlen);
     uint256 transitionalHash = resultHash;
 
-    for (unsigned int i = 1; i < nRounds; i++)
-    {
+    for (unsigned int i = 1; i < nRounds; i++) {
         resultHash = scrypt_salted_hash(input, inputlen, (const void*)&transitionalHash, 32);
         transitionalHash = resultHash;
     }
@@ -350,6 +400,13 @@ inline uint256 scrypt_blockhash(const void* input)
     //return scrypt_hash(input, 80);
     uint256 result;
     scryptHash(input, (char*)&result, 1024); //fixed length of 80
+    return result;
+}
+
+inline uint256 scrypt_squared_blockhash(const void* input)
+{
+    uint256 result;
+    scryptHash(input, (char*)&result, 1048576); //fixed length of 80
     return result;
 }
 
@@ -447,18 +504,22 @@ template <typename T1>
 inline uint256 HashScrypt(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
-    return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
+    uint256 result;
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1024) || result == uint256(0)) {
+        LogPrintf("Falling back to original implementation to generate normal scrypt hash\n");
+        return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
+    }
+    return result;
 }
 
-/* ----------- Scrypt^2 Hash ------------------------------------------------ */
+/* ----------- Scrypt² Hash ------------------------------------------------ */
 template <typename T1>
 inline uint256 HashScryptSquared(const T1 pbegin, const T1 pend)
 {
     static unsigned char pblank[1];
-    //return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
     uint256 result;
-    if (!scryptHash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (char*)&result, 1048576)) {
-        LogPrintf("Failed to generate scrypt² hash!\n");
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1048576) || result == uint256(0)) {
+        LogPrintf("Falling back to original implementation to generate scrypt² hash\n");
         return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
     }
     return result;

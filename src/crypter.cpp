@@ -29,7 +29,7 @@ bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::v
 
     if (nDerivationMethod == 1) {
         // Passphrase conversion
-        uint256 scryptHash = scrypt_salted_multiround_hash((const void*)strKeyData.c_str(), strKeyData.size(), &chSalt[0], 8, nRounds);
+        uint256 scryptHash = scrypt_salted_multiround_hash((const void*)strKeyData.c_str(), strKeyData.size(), &chSalt[0], WALLET_CRYPTO_SALT_SIZE, nRounds);
 
         i = EVP_BytesToKey(EVP_aes_256_cbc(), EVP_sha512(), &chSalt[0], (unsigned char *)&scryptHash, sizeof scryptHash, nRounds, chKey, chIV);
         memory_cleanse(&scryptHash, sizeof scryptHash);
