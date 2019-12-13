@@ -34,6 +34,8 @@
 
 
 typedef uint256 ChainCode;
+static const unsigned char PBLANK[1] = {};
+static const uint256 ZERO = uint256(0);
 
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
 class CHash256
@@ -208,9 +210,8 @@ inline void Hash(void* in, unsigned int len, unsigned char* out)
 template <typename T1>
 inline uint512 Hash512(const T1 pbegin, const T1 pend)
 {
-    static const unsigned char pblank[1] = {};
     uint512 result;
-    CHash512().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
+    CHash512().Write(pbegin == pend ? PBLANK : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -218,9 +219,8 @@ inline uint512 Hash512(const T1 pbegin, const T1 pend)
 template <typename T1, typename T2>
 inline uint512 Hash512(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end)
 {
-    static const unsigned char pblank[1] = {};
     uint512 result;
-    CHash512().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
+    CHash512().Write(p1begin == p1end ? PBLANK : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? PBLANK : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -228,9 +228,8 @@ inline uint512 Hash512(const T1 p1begin, const T1 p1end, const T2 p2begin, const
 template <typename T1>
 inline uint256 Hash1(const T1 pbegin, const T1 pend)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash1().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
+    CHash1().Write(pbegin == pend ? PBLANK : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -238,9 +237,8 @@ inline uint256 Hash1(const T1 pbegin, const T1 pend)
 template <typename T1, typename T2>
 inline uint256 Hash1(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash1().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
+    CHash1().Write(p1begin == p1end ? PBLANK : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? PBLANK : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -248,9 +246,8 @@ inline uint256 Hash1(const T1 p1begin, const T1 p1end, const T2 p2begin, const T
 template <typename T1>
 inline uint256 Hash(const T1 pbegin, const T1 pend)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash256().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
+    CHash256().Write(pbegin == pend ? PBLANK : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -258,9 +255,8 @@ inline uint256 Hash(const T1 pbegin, const T1 pend)
 template <typename T1, typename T2>
 inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
+    CHash256().Write(p1begin == p1end ? PBLANK : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? PBLANK : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -268,39 +264,35 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2
 template <typename T1, typename T2, typename T3>
 inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end, const T3 p3begin, const T3 p3end)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Finalize((unsigned char*)&result);
+    CHash256().Write(p1begin == p1end ? PBLANK : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? PBLANK : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? PBLANK : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
-/** Compute the 256-bit hash of the concatenation of three objects. */
+/** Compute the 256-bit hash of the concatenation of four objects. */
 template <typename T1, typename T2, typename T3, typename T4>
 inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end, const T3 p3begin, const T3 p3end, const T4 p4begin, const T4 p4end)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Write(p4begin == p4end ? pblank : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0])).Finalize((unsigned char*)&result);
+    CHash256().Write(p1begin == p1end ? PBLANK : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? PBLANK : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? PBLANK : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Write(p4begin == p4end ? PBLANK : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
-/** Compute the 256-bit hash of the concatenation of three objects. */
+/** Compute the 256-bit hash of the concatenation of five objects. */
 template <typename T1, typename T2, typename T3, typename T4, typename T5>
 inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end, const T3 p3begin, const T3 p3end, const T4 p4begin, const T4 p4end, const T5 p5begin, const T5 p5end)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Write(p4begin == p4end ? pblank : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0])).Write(p5begin == p5end ? pblank : (const unsigned char*)&p5begin[0], (p5end - p5begin) * sizeof(p5begin[0])).Finalize((unsigned char*)&result);
+    CHash256().Write(p1begin == p1end ? PBLANK : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? PBLANK : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? PBLANK : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Write(p4begin == p4end ? PBLANK : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0])).Write(p5begin == p5end ? PBLANK : (const unsigned char*)&p5begin[0], (p5end - p5begin) * sizeof(p5begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
-/** Compute the 256-bit hash of the concatenation of three objects. */
+/** Compute the 256-bit hash of the concatenation of six objects. */
 template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
 inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2 p2end, const T3 p3begin, const T3 p3end, const T4 p4begin, const T4 p4end, const T5 p5begin, const T5 p5end, const T6 p6begin, const T6 p6end)
 {
-    static const unsigned char pblank[1] = {};
     uint256 result;
-    CHash256().Write(p1begin == p1end ? pblank : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? pblank : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? pblank : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Write(p4begin == p4end ? pblank : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0])).Write(p5begin == p5end ? pblank : (const unsigned char*)&p5begin[0], (p5end - p5begin) * sizeof(p5begin[0])).Write(p6begin == p6end ? pblank : (const unsigned char*)&p6begin[0], (p6end - p6begin) * sizeof(p6begin[0])).Finalize((unsigned char*)&result);
+    CHash256().Write(p1begin == p1end ? PBLANK : (const unsigned char*)&p1begin[0], (p1end - p1begin) * sizeof(p1begin[0])).Write(p2begin == p2end ? PBLANK : (const unsigned char*)&p2begin[0], (p2end - p2begin) * sizeof(p2begin[0])).Write(p3begin == p3end ? PBLANK : (const unsigned char*)&p3begin[0], (p3end - p3begin) * sizeof(p3begin[0])).Write(p4begin == p4end ? PBLANK : (const unsigned char*)&p4begin[0], (p4end - p4begin) * sizeof(p4begin[0])).Write(p5begin == p5end ? PBLANK : (const unsigned char*)&p5begin[0], (p5end - p5begin) * sizeof(p5begin[0])).Write(p6begin == p6end ? PBLANK : (const unsigned char*)&p6begin[0], (p6end - p6begin) * sizeof(p6begin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -308,9 +300,8 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end, const T2 p2begin, const T2
 template <typename T1>
 inline uint160 Hash160(const T1 pbegin, const T1 pend)
 {
-    static unsigned char pblank[1] = {};
     uint160 result;
-    CHash160().Write(pbegin == pend ? pblank : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
+    CHash160().Write(pbegin == pend ? PBLANK : (const unsigned char*)&pbegin[0], (pend - pbegin) * sizeof(pbegin[0])).Finalize((unsigned char*)&result);
     return result;
 }
 
@@ -424,7 +415,6 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
     sph_jh512_context ctx_jh;
     sph_keccak512_context ctx_keccak;
     sph_skein512_context ctx_skein;
-    static unsigned char pblank[1];
 
     uint512 mask = 8;
     uint512 zero = 0;
@@ -433,7 +423,7 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
 
     sph_blake512_init(&ctx_blake);
     // ZBLAKE;
-    sph_blake512(&ctx_blake, (pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
+    sph_blake512(&ctx_blake, (pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
     sph_blake512_close(&ctx_blake, static_cast<void*>(&hash[0]));
 
     sph_bmw512_init(&ctx_bmw);
@@ -503,11 +493,10 @@ inline uint256 HashQuark(const T1 pbegin, const T1 pend)
 template <typename T1>
 inline uint256 HashScrypt(const T1 pbegin, const T1 pend)
 {
-    static unsigned char pblank[1];
     uint256 result;
-    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1024) || result == uint256(0)) {
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1024) || result == ZERO) {
         LogPrintf("Falling back to original implementation to generate normal scrypt hash\n");
-        return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
+        return scrypt_hash((pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]));
     }
     return result;
 }
@@ -516,11 +505,10 @@ inline uint256 HashScrypt(const T1 pbegin, const T1 pend)
 template <typename T1>
 inline uint256 HashScryptSquared(const T1 pbegin, const T1 pend)
 {
-    static unsigned char pblank[1];
     uint256 result;
-    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1048576) || result == uint256(0)) {
+    if ((pend - pbegin) * sizeof(pbegin[0]) != 80 || !scryptHash(static_cast<const void*>(&pbegin[0]), (char*)&result, 1048576) || result == ZERO) {
         LogPrintf("Falling back to original implementation to generate scrypt² hash\n");
-        return scrypt_hash((pbegin == pend ? pblank : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
+        return scrypt_hash((pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
     }
     return result;
 }
