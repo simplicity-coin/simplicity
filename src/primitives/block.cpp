@@ -14,10 +14,14 @@
 #include "utilstrencodings.h"
 #include "util.h"
 
+static const uint256 TRAILING_BITS = uint256("0000000000000000000000000000000000000000ffffffffffffffffffffffff");
+
 uint256 CBlockHeader::GetPoWHash() const
 {
     if (GetAlgo(nVersion) == POW_SCRYPT_SQUARED)
         return HashScryptSquared(BEGIN(nVersion), END(nNonce));
+    else if (GetAlgo(nVersion) == POW_SHA1D)
+        return (Hash1(BEGIN(nVersion), END(nNonce)) << 96) | TRAILING_BITS;
     else
         return HashQuark(BEGIN(nVersion), END(nNonce));
 }

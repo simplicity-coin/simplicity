@@ -249,6 +249,9 @@ std::string BlockToString(CBlockIndex* pBlock)
         case POW_SCRYPT_SQUARED:
             type = "proof of work - scrypt²";
             break;
+        case POW_SHA1D:
+            type = "proof of work - sha1d";
+            break;
     }
 
     std::string BlockContentCells[] =

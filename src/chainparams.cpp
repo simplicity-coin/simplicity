@@ -162,6 +162,7 @@ public:
         bnProofOfWorkLimit[POS] = ~uint256(0) >> 20;
         bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 16;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 11;
+        bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 27;
         nMaxReorganizationDepth = 100;
         nEnforceBlockUpgradeMajority = 6075; // 75%
         nRejectBlockOutdatedMajority = 7695; // 95%
@@ -318,6 +319,7 @@ public:
         nDefaultPort = 21957;
         bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 16;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 9;
+        bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 24;
         nEnforceBlockUpgradeMajority = 3780; // 70%
         nRejectBlockOutdatedMajority = 4050; // 75%
         nToCheckBlockUpgradeMajority = 5400; // 4 days (1350*4)
@@ -436,6 +438,7 @@ public:
         nTargetSpacing = 48; // Simplicity: 48 seconds
         bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 1;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 1;
+        bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 1;
         nMaturity = 100;
         nStakeMinDepth = 0;
         nMasternodeCountDrift = 4;
