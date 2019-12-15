@@ -206,7 +206,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
         result.push_back(Pair("CoinStake", stakeData));
     } else {
         UniValue workData(UniValue::VOBJ);
-        workData.push_back(Pair("hashProofOfWork", block.GetPoWHash().GetHex()));
+        workData.push_back(Pair("hashProofOfWork", block.GetPoWHash(block.nTime >= Params().QuarkToSHA256Time()).GetHex()));
         result.push_back(Pair("Mined", workData));
     }
 

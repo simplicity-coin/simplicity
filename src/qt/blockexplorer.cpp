@@ -243,8 +243,8 @@ std::string BlockToString(CBlockIndex* pBlock)
         case POS:
             type = "proof of stake";
             break;
-        case POW_QUARK:
-            type = "proof of work - quark";
+        case POW_SHA256D:
+            type = block.nTime >= Params().QuarkToSHA256Time() ? "proof of work - sha256d" : "proof of work - quark";
             break;
         case POW_SCRYPT_SQUARED:
             type = "proof of work - scrypt²";

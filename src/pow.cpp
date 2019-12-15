@@ -26,8 +26,8 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 {
-    bool newDiff = algo == POW_SCRYPT_SQUARED && pindex->nTime >= Params().BadScryptDiffTimeEnd();
-    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && pindex->nTime < Params().BadScryptDiffTimeEnd() && pindex->nTime >= Params().BadScryptDiffTimeStart())))
+    bool newDiff = algo == POW_SCRYPT_SQUARED && pindex->nTime >= Params().BadScryptDiffEndTime();
+    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && pindex->nTime < Params().BadScryptDiffEndTime() && pindex->nTime >= Params().BadScryptDiffStartTime())))
         pindex = pindex->pprev;
     return pindex;
 }
@@ -35,7 +35,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake)
 {
     int algo = CBlockHeader::GetAlgo(pblock->nVersion);
-    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? algo : POW_QUARK);
+    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? algo : POW_SHA256D);
     //if (Params().NetworkID() != CBaseChainParams::MAIN && !fProofOfStake) return bnTargetLimit.GetCompact(); // for testing
 
     if (pindexLast == NULL)
@@ -49,6 +49,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexPrevPrev->pprev == NULL)
         return bnTargetLimit.GetCompact(); // second block
 
+    //if (algo == POW_SHA256D && pindexPrevPrev->nTime < Params().QuarkToSHA256Time() && pblock->nTime >= Params().QuarkToSHA256Time())
+        //return bnTargetLimit.GetCompact(); // reset difficulty for new algo
+
     int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime(); // difficulty for PoW and PoS are calculated separately
 
     if (nActualSpacing <= 0)
@@ -60,8 +63,13 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     bnNew.SetCompact(pindexPrev->nBits);
 
     if (!fProofOfStake) {
-        bnNew *= ((Params().Interval() - 1) * ((ALGO_COUNT-1) * 2 * Params().TargetSpacing()) + nActualSpacing + nActualSpacing);
-        bnNew /= ((Params().Interval() + 1) * ((ALGO_COUNT-1) * 2 * Params().TargetSpacing()));
+        if (pblock->nTime >= Params().NewAlgoStartTime()) {
+            bnNew *= ((Params().Interval() - 1) * ((ALGO_COUNT-1) * 2 * Params().TargetSpacing()) + nActualSpacing + nActualSpacing);
+            bnNew /= ((Params().Interval() + 1) * ((ALGO_COUNT-1) * 2 * Params().TargetSpacing()));
+        } else {
+            bnNew *= ((Params().Interval() - 1) * (4 * Params().TargetSpacing()) + nActualSpacing + nActualSpacing);
+            bnNew /= ((Params().Interval() + 1) * (4 * Params().TargetSpacing()));
+        }
     } else {
         bnNew *= ((Params().Interval() - 1) * (2 * Params().TargetSpacing()) + nActualSpacing + nActualSpacing);
         bnNew /= ((Params().Interval() + 1) * (2 * Params().TargetSpacing())); // 160 second block time for PoW + 160 second block time for PoS = 80 second effective block time
@@ -85,7 +93,7 @@ unsigned int GetLegacyNextWorkRequired(const CBlockIndex* pindexLast, const CBlo
     int64_t nTargetSpacing = 80;
     int64_t nTargetTimespan = 20 * 60;
 
-    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(POW_QUARK);
+    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : ~uint256(0) >> 16; // previous quark limit
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
@@ -128,16 +136,16 @@ bool CheckProofOfWork(const CBlockHeader* pblock)
     bnTarget.SetCompact(pblock->nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? algo : POW_QUARK))
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? algo : POW_SHA256D))
         return error("CheckProofOfWork() : nBits below minimum work");
 
-    if (algo == POW_SCRYPT_SQUARED && pblock->nTime < Params().BadScryptDiffTimeEnd() && pblock->nTime >= Params().BadScryptDiffTimeStart()) {
+    if (algo == POW_SCRYPT_SQUARED && pblock->nTime < Params().BadScryptDiffEndTime() && pblock->nTime >= Params().BadScryptDiffStartTime()) {
         LogPrintf("CheckProofOfWork() : skipping block %s affected by scrypt difficulty bug\n", pblock->GetHash().GetHex());
         return true;
     }
 
     // Check proof of work matches claimed amount
-    if (pblock->GetPoWHash() > bnTarget) {
+    if (pblock->GetPoWHash(pblock->nTime >= Params().QuarkToSHA256Time()) > bnTarget) {
         if (Params().MineBlocksOnDemand())
             return false;
         else if (pblock->GetHash() == Params().HashGenesisBlock() && Params().NetworkID() == CBaseChainParams::MAIN) {

@@ -4315,7 +4315,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     if (nBlockCheckTime == 0)
         nBlockCheckTime = GetTime() - (2 * 24 * 60 * 60); // check the past 2 days worth of headers
 
-    if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && CBlockHeader::GetAlgo(block.nVersion) == -1)
+    if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && (CBlockHeader::GetAlgo(block.nVersion) == -1 || (block.nTime < Params().NewAlgoStartTime() && CBlockHeader::GetAlgo(block.nVersion) == POW_SHA1D)))
         return state.DoS(100, error("%s : block %s has an invalid type", __func__, block.GetHash().GetHex()));
 
     // Check proof of work matches claimed amount
@@ -4560,7 +4560,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
             if ((end == 10 && typeCount[POS] == 0) /*|| (CBlockHeader::GetAlgo(block.nVersion) == CBlockHeader::GetAlgo(pindexPrev->nVersion))*/)
                 return state.DoS(100, error("%s : too many PoW blocks in a row, at least one PoS block required", __func__),
                     REJECT_INVALID, "same-type");
-            for (int i = POW_QUARK; i < ALGO_COUNT; i++) {
+            for (int i = POW_SHA256D; i < ALGO_COUNT; i++) {
                 if (typeCount[i] > 4)
                     return state.DoS(100, error("%s : too many blocks of type=%i in a row, %i", __func__, i, typeCount[i]),
                         REJECT_INVALID, "same-type");

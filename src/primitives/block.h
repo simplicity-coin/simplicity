@@ -19,7 +19,7 @@ static const unsigned int MAX_BLOCK_SIZE_LEGACY = 85673194;
 
 enum BlockType {
     POS = 0,
-    POW_QUARK = 1,
+    POW_SHA256D = 1,
     POW_SCRYPT_SQUARED = 2,
     POW_SHA1D = 3,
     ALGO_COUNT
@@ -27,7 +27,7 @@ enum BlockType {
 
 enum AlgoFlags {
     ALGO_POS = 1<<29,
-    ALGO_POW_QUARK = 2<<29,
+    ALGO_POW_SHA256D = 2<<29,
     ALGO_POW_SCRYPT_SQUARED = 3<<29,
     ALGO_POW_SHA1D = 4<<29,
     ALGO_VERSION = 7<<29,
@@ -114,8 +114,8 @@ public:
         switch (version & ALGO_VERSION) {
             case ALGO_POS:
                 return POS;
-            case ALGO_POW_QUARK:
-                return POW_QUARK;
+            case ALGO_POW_SHA256D:
+                return POW_SHA256D;
             case ALGO_POW_SCRYPT_SQUARED:
                 return POW_SCRYPT_SQUARED;
             case ALGO_POW_SHA1D:
@@ -130,8 +130,8 @@ public:
         switch (algo) {
             case POS:
                 return ALGO_POS;
-            case POW_QUARK:
-                return ALGO_POW_QUARK;
+            case POW_SHA256D:
+                return ALGO_POW_SHA256D;
             case POW_SCRYPT_SQUARED:
                 return ALGO_POW_SCRYPT_SQUARED;
             case POW_SHA1D:
@@ -141,7 +141,7 @@ public:
         }
     }
 
-    uint256 GetPoWHash() const;
+    uint256 GetPoWHash(bool newAlgo) const;
     uint256 GetHash() const;
 
     int64_t GetBlockTime() const

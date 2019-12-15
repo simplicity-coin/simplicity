@@ -160,7 +160,7 @@ public:
         vAlertPubKey = ParseHex("03a728481601bb6f2e1873624fe15df816b0633b4c499406843c666800fbe45d5a");
         nDefaultPort = 11957;
         bnProofOfWorkLimit[POS] = ~uint256(0) >> 20;
-        bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 16;
+        bnProofOfWorkLimit[POW_SHA256D] = ~uint256(0) >> 16;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 11;
         bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 27;
         nMaxReorganizationDepth = 100;
@@ -180,8 +180,10 @@ public:
         /** Height or Time Based Activations **/
         nMandatoryUpgradeBlock = 1030000;
         nUpgradeBlockVersion = 8; //Block headers must be this version after upgrade block
-        nBadScryptDiffTimeStart = 1573746979;
-        nBadScryptDiffTimeEnd = 1574121600;
+        nBadScryptDiffStartTime = 1573746979;
+        nBadScryptDiffEndTime = 1574121600;
+        nNewAlgoStartTime = 4070908800;
+        nQuarkToSHA256Time = 4070908800;
         nModifierUpdateBlock = 0;
         nZerocoinStartHeight = 2100000000;
         //nZerocoinStartTime = 1508214600;
@@ -235,7 +237,7 @@ public:
         genesis.nNonce = 561379;
 
         //uint256 hashTarget = uint256().SetCompact(genesis.nBits);
-        //assert(genesis.GetPoWHash() <= hashTarget);
+        //assert(genesis.GetPoWHash(false) <= hashTarget);
 
         hashGenesisBlock = genesis.GetHash();
         assert(genesis.hashMerkleRoot == uint256("0x40bdd3d5ae84b91a71190094a82948400eb3356e87c5376b64d79509cf552d84"));
@@ -317,7 +319,7 @@ public:
         pchMessageStart[3] = 0xc6;
         vAlertPubKey = ParseHex("03b95000b2b06e391c058ea14d47ac3c525753c68460864f254ada5a63e27a8134");
         nDefaultPort = 21957;
-        bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 16;
+        bnProofOfWorkLimit[POW_SHA256D] = ~uint256(0) >> 16;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 9;
         bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 24;
         nEnforceBlockUpgradeMajority = 3780; // 70%
@@ -326,8 +328,10 @@ public:
         nMinerThreads = 0;
         nTargetTimespan = 20 * 60; // Simplicity: 20 minutes
         nTargetSpacing = 64; // Simplicity: 64 seconds
-        nBadScryptDiffTimeStart = 2100000000;
-        nBadScryptDiffTimeEnd = 2100000000;
+        nBadScryptDiffStartTime = 2100000000;
+        nBadScryptDiffEndTime = 2100000000;
+        nNewAlgoStartTime = 978307200;
+        nQuarkToSHA256Time = 1576364400;
         nMaturity = 15;
         nStakeMinDepth = 100;
         nMasternodeCountDrift = 4;
@@ -368,7 +372,7 @@ public:
         genesis.nNonce = 164084;
 
         uint256 hashTarget = uint256().SetCompact(genesis.nBits);
-        assert(genesis.GetPoWHash() <= hashTarget);
+        assert(genesis.GetPoWHash(false) <= hashTarget);
 
         hashGenesisBlock = genesis.GetHash();
         //printf("Merkle hash test: %s\n", genesis.hashMerkleRoot.ToString().c_str());
@@ -436,7 +440,7 @@ public:
         nMinerThreads = 1;
         nTargetTimespan = 10 * 60; // Simplicity: 10 minutes
         nTargetSpacing = 48; // Simplicity: 48 seconds
-        bnProofOfWorkLimit[POW_QUARK] = ~uint256(0) >> 1;
+        bnProofOfWorkLimit[POW_SHA256D] = ~uint256(0) >> 1;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 1;
         bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 1;
         nMaturity = 100;
@@ -463,7 +467,7 @@ public:
 
         uint256 hashTarget = uint256().SetCompact(genesis.nBits);
         /*while (true) {
-            uint256 hash = genesis.GetPoWHash();
+            uint256 hash = genesis.GetPoWHash(false);
             if (hash <= hashTarget) {
                 // Found a solution
                 printf("genesis block found\n   hash: %s\n target: %s\n  nonce: %i\n", hash.ToString().c_str(), hashTarget.ToString().c_str(), genesis.nNonce);
@@ -471,7 +475,7 @@ public:
             }
             genesis.nNonce += 1;
         }*/
-        assert(genesis.GetPoWHash() <= hashTarget);
+        assert(genesis.GetPoWHash(false) <= hashTarget);
 
         hashGenesisBlock = genesis.GetHash();
         //printf("Merkle hash reg: %s\n", genesis.hashMerkleRoot.ToString().c_str());

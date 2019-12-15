@@ -16,11 +16,14 @@
 
 static const uint256 TRAILING_BITS = uint256("0000000000000000000000000000000000000000ffffffffffffffffffffffff");
 
-uint256 CBlockHeader::GetPoWHash() const
+uint256 CBlockHeader::GetPoWHash(bool newAlgo) const
 {
-    if (GetAlgo(nVersion) == POW_SCRYPT_SQUARED)
+    int algo = GetAlgo(nVersion);
+    if (algo == POW_SHA256D && newAlgo)
+        return Hash(BEGIN(nVersion), END(nNonce));
+    else if (algo == POW_SCRYPT_SQUARED)
         return HashScryptSquared(BEGIN(nVersion), END(nNonce));
-    else if (GetAlgo(nVersion) == POW_SHA1D)
+    else if (algo == POW_SHA1D)
         return (Hash1(BEGIN(nVersion), END(nNonce)) << 96) | TRAILING_BITS;
     else
         return HashQuark(BEGIN(nVersion), END(nNonce));
@@ -33,7 +36,7 @@ uint256 CBlockHeader::GetHash() const
     else*/ if (nVersion > 1)
         return Hash(BEGIN(nVersion), END(nNonce));
     else
-        return GetPoWHash();
+        return HashQuark(BEGIN(nVersion), END(nNonce));
 }
 
 uint256 CBlock::BuildMerkleTree(bool* fMutated) const

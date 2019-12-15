@@ -61,7 +61,7 @@ public:
     }
 };
 
-unsigned int nCreateBlockAlgo = POW_QUARK;
+unsigned int nCreateBlockAlgo = POW_SHA256D;
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 int64_t nLastCoinStakeSearchInterval = 0;
@@ -773,7 +773,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                             // Found a solution
                             SetThreadPriority(THREAD_PRIORITY_NORMAL);
                             LogPrintf("%s:\n", __func__);
-                            LogPrintf("proof-of-work found\n   hash: %s\n target: %s\n  nonce: %i\n", pblock->GetPoWHash().GetHex(), hashTarget.GetHex(), pblock->nNonce);
+                            LogPrintf("proof-of-work found\n   hash: %s\n target: %s\n  nonce: %i\n", pblock->GetPoWHash(true).GetHex(), hashTarget.GetHex(), pblock->nNonce);
                             ProcessBlockFound(pblock, *pwallet, reservekey);
                             SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
@@ -792,8 +792,9 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                     }
                 } else {
                     uint256 hash;
+                    bool newAlgo = pblock->nTime >= Params().QuarkToSHA256Time();
                     while (true) {
-                        hash = pblock->GetPoWHash();
+                        hash = pblock->GetPoWHash(newAlgo);
                         if (hash <= hashTarget) {
                             // Found a solution
                             SetThreadPriority(THREAD_PRIORITY_NORMAL);
