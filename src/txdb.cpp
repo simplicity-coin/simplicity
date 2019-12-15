@@ -268,7 +268,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 //pindexNew->hashProofOfWork = diskindex.hashProofOfWork;
 
                 // treat PoW and PoS blocks the same - don't waste time on redundant PoW checks that won't catch invalid PoS blocks anyway - nNonce = 0 for PoS blocks
-                if (pindexNew->GetBlockHash() != Params().HashGenesisBlock() && (pindexNew->nNonce != 0 || pindexNew->nVersion >= Params().WALLET_UPGRADE_VERSION()) && pindexNew->IsProofOfWork() && CBlockHeader::GetAlgo(pindexNew->nVersion) != POW_SCRYPT_SQUARED) {
+                if ((pindexNew->nNonce != 0 || pindexNew->nVersion >= Params().WALLET_UPGRADE_VERSION()) && pindexNew->IsProofOfWork() && CBlockHeader::GetAlgo(pindexNew->nVersion) != POW_SCRYPT_SQUARED) {
                     CBlockHeader header = pindexNew->GetBlockHeader();
                     if (!CheckProofOfWork(&header))
                         return error("LoadBlockIndex() : CheckProofOfWork failed: %s", pindexNew->ToString());

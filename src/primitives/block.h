@@ -44,7 +44,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=8;
+    static const uint32_t CURRENT_VERSION = 8;
     uint32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -121,7 +121,7 @@ public:
         }
     }
 
-    static int GetVer(int algo)
+    static uint32_t GetVer(int algo)
     {
         switch (algo) {
             case POS:

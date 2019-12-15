@@ -26,9 +26,9 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle* networkStyle) 
 {
     // set reference point, paddings
     int paddingLeft = 14;
-    int paddingTop = 470;
+    int paddingTop = 34;
     int titleVersionVSpace = 17;
-    int titleCopyrightVSpace = 32;
+    //int titleCopyrightVSpace = 32;
 
     float fontFactor = 1.0;
 
@@ -68,10 +68,10 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle* networkStyle) 
 
     // draw copyright stuff
     pixPaint.setFont(QFont(font, 10 * fontFactor));
-    pixPaint.drawText(paddingLeft, paddingTop + titleCopyrightVSpace, copyrightTextBtc);
-    pixPaint.drawText(paddingLeft, paddingTop + titleCopyrightVSpace + 12, copyrightTextDash);
-    pixPaint.drawText(paddingLeft, paddingTop + titleCopyrightVSpace + 24, copyrightTextPIVX);
-    pixPaint.drawText(paddingLeft, paddingTop + titleCopyrightVSpace + 36, copyrightTextSPL);
+    pixPaint.drawText(paddingLeft + 270, paddingTop-titleVersionVSpace /*+ titleCopyrightVSpace*/, copyrightTextBtc);
+    pixPaint.drawText(paddingLeft + 270, paddingTop-titleVersionVSpace /*+ titleCopyrightVSpace*/ + 12, copyrightTextDash);
+    pixPaint.drawText(paddingLeft + 270, paddingTop-titleVersionVSpace /*+ titleCopyrightVSpace*/ + 24, copyrightTextPIVX);
+    pixPaint.drawText(paddingLeft + 270, paddingTop-titleVersionVSpace /*+ titleCopyrightVSpace*/ + 36, copyrightTextSPL);
 
     // draw additional text if special network
     if (!titleAddText.isEmpty()) {

@@ -2095,7 +2095,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 
     // Check the header
     // treat PoW and PoS blocks the same - don't waste time on redundant PoW checks that won't catch invalid PoS blocks anyway
-    if (block.GetHash() != Params().HashGenesisBlock() && block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
+    if (block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -4319,7 +4319,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
         return state.DoS(100, error("%s : block %s has an invalid type", __func__, block.GetHash().GetHex()));
 
     // Check proof of work matches claimed amount
-    if (block.GetHash() != Params().HashGenesisBlock() && (fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
+    if ((fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
         return state.DoS(50, error("%s : proof of work failed", __func__),
             REJECT_INVALID, "high-hash");
 
@@ -4543,7 +4543,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
         if (Params().NetworkID() != CBaseChainParams::REGTEST && nHeight >= 10 + Params().WALLET_UPGRADE_BLOCK() + Params().COINSTAKE_MIN_DEPTH()) {
             int end = std::max(std::min(nHeight - 9 - Params().WALLET_UPGRADE_BLOCK() - Params().COINSTAKE_MIN_DEPTH(), 10), 0); // start checking one more at a time until we can enforce on all new blocks
-            int typeCount[ALGO_COUNT] = { };
+            int typeCount[ALGO_COUNT] = {};
             //int proofOfWorkCount = 0;
             if (CBlockHeader::GetAlgo(block.nVersion) == -1)
                 return false;

@@ -108,7 +108,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     if (!pblocktemplate.get())
         return NULL;
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
-    int ver = 0;
+    uint32_t ver = 0;
 
     // Tip
     CBlockIndex* pindexPrev = nullptr;
@@ -854,7 +854,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                     break;
 
                 // Update nTime every few seconds
-                UpdateTime(pblock, pindexPrev, pblock->IsProofOfStake());
+                UpdateTime(pblock, pindexPrev, fProofOfStake);
                 if (Params().AllowMinDifficultyBlocks()) {
                     // Changing pblock->nTime can change work required on testnet:
                     hashTarget.SetCompact(pblock->nBits);
