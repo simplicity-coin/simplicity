@@ -314,6 +314,12 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/jh.c \
   crypto/keccak.c \
   crypto/skein.c \
+  crypto/argon2/argon2.c \
+  crypto/argon2/best.c \
+  crypto/argon2/blake2b.c \
+  crypto/argon2/core.c \
+  crypto/argon2/encoding.c \
+  crypto/argon2/thread.c \
   crypto/common.h \
   crypto/sha256.h \
   crypto/sha512.h \
@@ -330,7 +336,13 @@ crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/sph_jh.h \
   crypto/sph_keccak.h \
   crypto/sph_skein.h \
-  crypto/sph_types.h
+  crypto/sph_types.h \
+  crypto/argon2/argon2.h \
+  crypto/argon2/blake2.h \
+  crypto/argon2/blake2-impl.h \
+  crypto/argon2/core.h \
+  crypto/argon2/encoding.h \
+  crypto/argon2/thread.h
 
 # libzerocoin library
 libzerocoin_libbitcoin_zerocoin_a_CPPFLAGS = $(AM_CPPFLAGS) $(BOOST_CPPFLAGS)
@@ -537,6 +549,13 @@ libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 endif
 #
 
+ARGON2D_DIST = crypto/argon2/ref.c
+ARGON2D_DIST += crypto/argon2/opt.c
+ARGON2D_DIST += crypto/argon2/ref.h
+ARGON2D_DIST += crypto/argon2/opt.h
+ARGON2D_DIST += crypto/argon2/blamka-round-opt.h
+ARGON2D_DIST += crypto/argon2/blamka-round-ref.h
+
 CLEANFILES = $(EXTRA_LIBRARIES)
 
 CLEANFILES += *.gcda *.gcno
@@ -554,7 +573,7 @@ CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += zspl/*.gcda zspl/*.gcno
 CLEANFILES += obj/build.h
 
-EXTRA_DIST =
+EXTRA_DIST = $(ARGON2D_DIST)
 
 
 config/simplicity-config.h: config/stamp-h1

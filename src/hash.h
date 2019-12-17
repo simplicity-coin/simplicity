@@ -26,6 +26,7 @@
 #include "crypto/sha512.h"
 #include "crypto/scrypt.h"
 #include "crypto/scrypt_opt.h"
+#include "crypto/argon2/argon2.h"
 
 #include <iomanip>
 #include <openssl/sha.h>
@@ -510,6 +511,25 @@ inline uint256 HashScryptSquared(const T1 pbegin, const T1 pend)
         LogPrintf("Falling back to original implementation to generate scrypt² hash\n");
         return scrypt_hash((pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), 1048576);
     }
+    return result;
+}
+
+/* ----------- Argon2d4096 Hash ------------------------------------------------ */
+template <typename T1>
+inline uint256 HashArgon2d(const T1 pbegin, const T1 pend)
+{
+    uint32_t t_cost = 1; // 1 iteration
+    uint32_t m_cost = 4096; // use 4MB
+    uint32_t parallelism = 1; // 1 thread, 2 lanes
+
+    size_t pwdlen = (pend - pbegin) * sizeof(pbegin[0]);
+
+    uint256 result;
+    size_t hashlen = 32;
+
+    argon2d_hash_raw(t_cost, m_cost, parallelism, (pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), pwdlen,
+                    (pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), pwdlen, (char*)&result, hashlen);
+
     return result;
 }
 

@@ -25,6 +25,8 @@ uint256 CBlockHeader::GetPoWHash(bool newAlgo) const
         return HashScryptSquared(BEGIN(nVersion), END(nNonce));
     else if (algo == POW_SHA1D)
         return (Hash1(BEGIN(nVersion), END(nNonce)) << 96) | TRAILING_BITS;
+    else if (algo == POW_ARGON2D)
+        return HashArgon2d(BEGIN(nVersion), END(nNonce));
     else
         return HashQuark(BEGIN(nVersion), END(nNonce));
 }

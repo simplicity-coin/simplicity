@@ -163,6 +163,7 @@ public:
         bnProofOfWorkLimit[POW_SHA256D] = ~uint256(0) >> 16;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 11;
         bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 27;
+        bnProofOfWorkLimit[POW_ARGON2D] = ~uint256(0) >> 16;
         nMaxReorganizationDepth = 100;
         nEnforceBlockUpgradeMajority = 6075; // 75%
         nRejectBlockOutdatedMajority = 7695; // 95%
@@ -322,6 +323,7 @@ public:
         bnProofOfWorkLimit[POW_SHA256D] = ~uint256(0) >> 16;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 9;
         bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 24;
+        bnProofOfWorkLimit[POW_ARGON2D] = ~uint256(0) >> 12;
         nEnforceBlockUpgradeMajority = 3780; // 70%
         nRejectBlockOutdatedMajority = 4050; // 75%
         nToCheckBlockUpgradeMajority = 5400; // 4 days (1350*4)
@@ -443,6 +445,7 @@ public:
         bnProofOfWorkLimit[POW_SHA256D] = ~uint256(0) >> 1;
         bnProofOfWorkLimit[POW_SCRYPT_SQUARED] = ~uint256(0) >> 1;
         bnProofOfWorkLimit[POW_SHA1D] = ~uint256(0) >> 1;
+        bnProofOfWorkLimit[POW_ARGON2D] = ~uint256(0) >> 1;
         nMaturity = 100;
         nStakeMinDepth = 0;
         nMasternodeCountDrift = 4;

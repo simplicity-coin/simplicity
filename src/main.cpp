@@ -3582,12 +3582,12 @@ void static UpdateTip(CBlockIndex* pindexNew)
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
         for (int i = 0; i < 100 && pindex != NULL; i++) {
-            if (pindex->nVersion > (uint32_t)ALGO_POW_SHA1D)
+            if (pindex->nVersion > (uint32_t)ALGO_POW_ARGON2D)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            LogPrintf("%s: %i of last 100 blocks above version %u\n", __func__, nUpgraded, ALGO_POW_SHA1D);
+            LogPrintf("%s: %i of last 100 blocks above version %u\n", __func__, nUpgraded, ALGO_POW_ARGON2D);
         if (nUpgraded > 100/2) {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
@@ -4315,7 +4315,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     if (nBlockCheckTime == 0)
         nBlockCheckTime = GetTime() - (2 * 24 * 60 * 60); // check the past 2 days worth of headers
 
-    if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && (CBlockHeader::GetAlgo(block.nVersion) == -1 || (block.nTime < Params().NewAlgoStartTime() && CBlockHeader::GetAlgo(block.nVersion) == POW_SHA1D)))
+    if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && (CBlockHeader::GetAlgo(block.nVersion) == -1 || (block.nTime < Params().NewAlgoStartTime() && CBlockHeader::GetAlgo(block.nVersion) > POW_SCRYPT_SQUARED)))
         return state.DoS(100, error("%s : block %s has an invalid type", __func__, block.GetHash().GetHex()));
 
     // Check proof of work matches claimed amount

@@ -22,6 +22,7 @@ enum BlockType {
     POW_SHA256D = 1,
     POW_SCRYPT_SQUARED = 2,
     POW_SHA1D = 3,
+    POW_ARGON2D = 4,
     ALGO_COUNT
 };
 
@@ -30,6 +31,7 @@ enum AlgoFlags {
     ALGO_POW_SHA256D = 2<<29,
     ALGO_POW_SCRYPT_SQUARED = 3<<29,
     ALGO_POW_SHA1D = 4<<29,
+    ALGO_POW_ARGON2D = 5<<29,
     ALGO_VERSION = 7<<29,
     ALGO_POS_VERSION = ALGO_POS,
     ALGO_POW_VERSION = 6<<29
@@ -120,6 +122,8 @@ public:
                 return POW_SCRYPT_SQUARED;
             case ALGO_POW_SHA1D:
                 return POW_SHA1D;
+            case ALGO_POW_ARGON2D:
+                return POW_ARGON2D;
             default:
                 return -1;
         }
@@ -136,6 +140,8 @@ public:
                 return ALGO_POW_SCRYPT_SQUARED;
             case POW_SHA1D:
                 return ALGO_POW_SHA1D;
+            case POW_ARGON2D:
+                return ALGO_POW_ARGON2D;
             default:
                 return CBlockHeader::CURRENT_VERSION;
         }
