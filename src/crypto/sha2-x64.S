@@ -15,7 +15,7 @@
     .section .note.GNU-stack,"",%progbits
 #endif
 
-#if defined(__x86_64__)
+#if /*defined(USE_ASM) &&*/ defined(__x86_64__)
 
     .data
     .p2align 4
@@ -1626,7 +1626,7 @@ sha256d_8preext2_24:
 sha256d_8preext2_30:
     .long 0x00400022, 0x00400022, 0x00400022, 0x00400022, 0x00400022, 0x00400022, 0x00400022, 0x00400022
 
-#endif /* USE_AVX2 */
+#endif /* ENABLE_AVX2 */
 
 
     .text
@@ -1692,12 +1692,21 @@ _sha256_init_8way:
     popq    %rdi
 #endif
     ret
-#endif /* USE_AVX2 */
+#endif /* ENABLE_AVX2 */
 
 
 
 
 
+
+
+#if defined(ENABLE_AVX)
+
+
+
+
+
+#endif /* ENABLE_AVX */
 
 
 #if defined(ENABLE_AVX2)
@@ -1706,25 +1715,16 @@ _sha256_init_8way:
 
 
 
-#endif /* USE_AVX */
+#endif /* ENABLE_AVX2 */
 
 
-#if defined(ENABLE_AVX2)
-
-
-
-
-
-#endif /* USE_AVX2 */
-
-
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
 
 
 
 
 
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 
     .text
@@ -1879,7 +1879,7 @@ sha256_transform_4way_sse2_main_loop:
     jmp sha256_transform_4way_finish
 
 
-#if defined(ENABLE_AVX2)
+#if defined(ENABLE_AVX)
     .text
     .p2align 6
 sha256_transform_4way_core_avx:
@@ -5745,10 +5745,10 @@ sha256_transform_4way_core_avx:
     vpxor   %xmm2, %xmm7, %xmm7
     vpaddd  %xmm6, %xmm7, %xmm7
     jmp sha256_transform_4way_finish
-#endif /* USE_AVX */
+#endif /* ENABLE_AVX */
 
 
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
     .text
     .p2align 6
 sha256_transform_4way_core_xop:
@@ -8462,7 +8462,7 @@ sha256_transform_4way_core_xop:
     vpxor   %xmm2, %xmm7, %xmm7
     vpaddd  %xmm6, %xmm7, %xmm7
     jmp sha256_transform_4way_finish
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 
     .data
@@ -12795,7 +12795,7 @@ sha256_transform_8way_finish:
 #endif
     ret
 
-#endif /* USE_AVX2 */
+#endif /* ENABLE_AVX2 */
 
 
     .data
@@ -18451,7 +18451,7 @@ sha256d_ms_4way_sse2_finish:
     ret
 
 
-#if defined(ENABLE_AVX2)
+#if defined(ENABLE_AVX)
 
     .p2align 6
 sha256d_ms_4way_avx:
@@ -22566,10 +22566,10 @@ sha256d_ms_4way_avx_finish:
 #endif
     ret
 
-#endif /* USE_AVX */
+#endif /* ENABLE_AVX */
 
 
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
 
     .p2align 6
 sha256d_ms_4way_xop:
@@ -25489,7 +25489,7 @@ sha256d_ms_4way_xop_finish:
 #endif
     ret
 
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 
     .text
@@ -25502,7 +25502,7 @@ _sha256_use_4way:
     pushq   %rcx
     pushq   %rdx
 
-#if defined(ENABLE_AVX2)
+#if defined(ENABLE_AVX)
     /* Check for AVX and OSXSAVE support */
     movl    $1, %eax
     cpuid
@@ -25515,7 +25515,7 @@ _sha256_use_4way:
     andl    $0x00000006, %eax
     cmpl    $0x00000006, %eax
     jne sha256_use_4way_base
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
     /* Check for XOP support */
     movl    $0x80000001, %eax
     cpuid
@@ -25526,13 +25526,13 @@ sha256_use_4way_xop:
     leaq    sha256d_ms_4way_xop(%rip), %rcx
     leaq    sha256_transform_4way_core_xop(%rip), %rdx
     jmp sha256_use_4way_done
-#endif /* USE_XOP */
+#endif /* ENABLE_XOP */
 
 sha256_use_4way_avx:
     leaq    sha256d_ms_4way_avx(%rip), %rcx
     leaq    sha256_transform_4way_core_avx(%rip), %rdx
     jmp sha256_use_4way_done
-#endif /* USE_AVX */
+#endif /* ENABLE_AVX */
 
 sha256_use_4way_base:
     leaq    sha256d_ms_4way_sse2(%rip), %rcx
@@ -29713,6 +29713,6 @@ sha256_use_8way_done:
     popq    %rbx
     ret
 
-#endif /* USE_AVX2 */
+#endif /* ENABLE_AVX2 */
 
 #endif

@@ -27,11 +27,40 @@
  * online backup system.
  */
 
-#include "crypto/scrypt2.h"
+#include "crypto/scrypt_opt.h"
 #include "compat.h"
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdio.h>
+
+static bool HAVE_AVX2 = false;
+
+#if defined(__x86_64__)
+static inline void __attribute__((constructor)) check_avx2()
+{
+    int a, b, c, d, AVX_mask = (1<<28) | (1<<26) | (1<<27);
+    asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(1), "c"(0)); //avx
+    if ((c & AVX_mask) == AVX_mask) {
+        printf("Have AVX\n");
+    } else {
+        printf("Do not have AVX\n");
+    }
+
+    asm volatile("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(7), "c"(0)); //avx2
+    if (b & (1<<5)) {
+        HAVE_AVX2 = true;
+        printf("Have AVX2\n");
+    } else {
+        printf("Do not have AVX2\n");
+    }
+}
+#elif defined(__ARM_NEON)
+static inline void __attribute__((constructor)) display_neon()
+{
+    printf("Have NEON\n");
+}
+#endif
 
 static const uint32_t sha256_h[8] = {
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
@@ -44,7 +73,6 @@ void sha256_init(uint32_t *state)
 }
 
 #if defined(__i386__)
-
 static const uint32_t sha256_k[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -564,22 +592,22 @@ static inline void PBKDF2_SHA256_128_32_8way(uint32_t *tstate,
 
 #ifndef SCRYPT_MAX_WAYS
 #define SCRYPT_MAX_WAYS 1
-#define scrypt_best_throughput() 1
+#define SCRYPT_BEST_THROUGHPUT 1
 #endif
 
-unsigned char *scrypt_buffer_alloc(int N)
+unsigned char *scrypt_buffer_alloc(int N, bool multiWay)
 {
-    return (unsigned char*)malloc((size_t)N * SCRYPT_MAX_WAYS * 128 + 63);
+    return (unsigned char*)malloc((size_t)N * (multiWay ? (HAVE_AVX2 ? 2 * SCRYPT_MAX_WAYS : SCRYPT_MAX_WAYS) : 1) * 128 + 63);
 }
 
-static void scrypt_N_1_1_256(const uint32_t *input, uint32_t *output,
-    uint32_t *midstate, unsigned char *scratchpad, int N)
+static void scrypt_N_1_1_256(const uint32_t *input,
+    uint32_t *output, uint32_t *midstate, unsigned char *scratchpad, int N)
 {
     uint32_t tstate[8], ostate[8];
     uint32_t X[32] __attribute__((aligned(128)));
     uint32_t *V;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     memcpy(tstate, midstate, 32);
     HMAC_SHA256_80_init(input, tstate, ostate);
@@ -601,7 +629,7 @@ static void scrypt_N_1_1_256_4way(const uint32_t *input,
     uint32_t *V;
     int i, k;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     for (i = 0; i < 20; i++)
         for (k = 0; k < 4; k++)
@@ -637,7 +665,7 @@ static void scrypt_N_1_1_256_3way(const uint32_t *input,
     uint32_t X[3 * 32] __attribute__((aligned(64)));
     uint32_t *V;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     memcpy(tstate +  0, midstate, 32);
     memcpy(tstate +  8, midstate, 32);
@@ -667,7 +695,7 @@ static void scrypt_N_1_1_256_12way(const uint32_t *input,
     uint32_t *V;
     int i, j, k;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     for (j = 0; j < 3; j++)
         for (i = 0; i < 20; i++)
@@ -718,7 +746,7 @@ static void scrypt_N_1_1_256_24way(const uint32_t *input,
     uint32_t *V;
     int i, j, k;
 
-    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+    V = (uint32_t *)(((uintptr_t)(scratchpad) + 63) & ~(uintptr_t)(63));
 
     for (j = 0; j < 3; j++)
         for (i = 0; i < 20; i++)
@@ -763,7 +791,7 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
         if (hash[i] > target[i]) {
             return false;
         }
-        if (hash[i] < target[i]) {
+        if (hash[i] <= target[i]) {
             return true;
         }
     }
@@ -774,14 +802,14 @@ bool fulltest(const uint32_t *hash, const uint32_t *target)
 bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, unsigned char *scratchbuf, int N)
 {
     uint32_t pdata[20];
-    uint32_t data[SCRYPT_MAX_WAYS * 20];
-    uint32_t dhash[SCRYPT_MAX_WAYS * 8];
+    uint32_t data[(2 * SCRYPT_MAX_WAYS) * 20];
+    uint32_t dhash[(2 * SCRYPT_MAX_WAYS) * 8];
     uint32_t midstate[8];
     uint32_t n;
-    int throughput = scrypt_best_throughput();
+    int throughput = (HAVE_AVX2 ? 2 * SCRYPT_BEST_THROUGHPUT : SCRYPT_BEST_THROUGHPUT);
     int i;
 
-    for (int i = 0; i < 20; i++)
+    for (i = 0; i < 20; i++)
         pdata[i] = be32dec(&((const uint32_t *)input)[i]);
     n = pdata[19];
 
@@ -836,7 +864,7 @@ bool scryptHash(const void *input, char *output, int N)
 {
     uint32_t midstate[8];
     uint32_t data[20];
-    unsigned char *scratchbuf = scrypt_buffer_alloc(N);
+    unsigned char *scratchbuf = scrypt_buffer_alloc(N, false);
 
     memset(output, 0, 32);
     if (!scratchbuf)

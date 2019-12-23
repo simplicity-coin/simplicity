@@ -11,7 +11,7 @@
 #include "config/simplicity-config.h"
 #endif
 
-#if defined(__arm__) && defined(__APCS_32__)
+#if /*defined(USE_ASM) &&*/ defined(__arm__) && defined(__APCS_32__)
 
 
 

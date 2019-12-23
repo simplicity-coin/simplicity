@@ -26,25 +26,26 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 
 const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, int algo)
 {
-    bool newDiff = pindex->nTime >= Params().BadScryptDiffTimeEnd();
-    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && algo == POW_SCRYPT_SQUARED && pindex->nTime < Params().BadScryptDiffTimeEnd() && pindex->nTime >= Params().BadScryptDiffTimeStart())))
+    bool newDiff = algo == POW_SCRYPT_SQUARED && pindex->nTime >= Params().BadScryptDiffTimeEnd();
+    while (pindex && pindex->pprev && (CBlockHeader::GetAlgo(pindex->nVersion) != algo || (newDiff && pindex->nTime < Params().BadScryptDiffTimeEnd() && pindex->nTime >= Params().BadScryptDiffTimeStart())))
         pindex = pindex->pprev;
     return pindex;
 }
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake)
 {
-    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK);
+    int algo = CBlockHeader::GetAlgo(pblock->nVersion);
+    uint256 bnTargetLimit = fProofOfStake ? Params().ProofOfStakeLimit() : Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? algo : POW_QUARK);
     //if (Params().NetworkID() != CBaseChainParams::MAIN && !fProofOfStake) return bnTargetLimit.GetCompact(); // for testing
 
     if (pindexLast == NULL)
         return bnTargetLimit.GetCompact(); // genesis block
 
-    const CBlockIndex* pindexPrev = pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? GetLastBlockIndex(pindexLast, CBlockHeader::GetAlgo(pblock->nVersion)) : GetLastBlockIndex(pindexLast, fProofOfStake);
+    const CBlockIndex* pindexPrev = pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? GetLastBlockIndex(pindexLast, algo) : GetLastBlockIndex(pindexLast, fProofOfStake);
     if (pindexPrev->pprev == NULL)
         return bnTargetLimit.GetCompact(); // first block
 
-    const CBlockIndex* pindexPrevPrev = pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? GetLastBlockIndex(pindexPrev->pprev, CBlockHeader::GetAlgo(pblock->nVersion)) : GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
+    const CBlockIndex* pindexPrevPrev = pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? GetLastBlockIndex(pindexPrev->pprev, algo) : GetLastBlockIndex(pindexPrev->pprev, fProofOfStake);
     if (pindexPrevPrev->pprev == NULL)
         return bnTargetLimit.GetCompact(); // second block
 
@@ -123,22 +124,26 @@ bool CheckProofOfWork(const CBlockHeader* pblock)
     if (Params().SkipProofOfWorkCheck())
         return true;
 
+    int algo = CBlockHeader::GetAlgo(pblock->nVersion);
     bnTarget.SetCompact(pblock->nBits, &fNegative, &fOverflow);
 
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? CBlockHeader::GetAlgo(pblock->nVersion) : POW_QUARK))
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit(pblock->nVersion >= Params().WALLET_UPGRADE_VERSION() ? algo : POW_QUARK))
         return error("CheckProofOfWork() : nBits below minimum work");
 
-    if (CBlockHeader::GetAlgo(pblock->nVersion) == POW_SCRYPT_SQUARED && pblock->nTime < Params().BadScryptDiffTimeEnd() && pblock->nTime >= Params().BadScryptDiffTimeStart()) {
-        LogPrintf("CheckProofOfWork() : skipping block %s affected by difficulty bug\n", pblock->GetHash().GetHex());
+    if (algo == POW_SCRYPT_SQUARED && pblock->nTime < Params().BadScryptDiffTimeEnd() && pblock->nTime >= Params().BadScryptDiffTimeStart()) {
+        LogPrintf("CheckProofOfWork() : skipping block %s affected by scrypt difficulty bug\n", pblock->GetHash().GetHex());
         return true;
     }
-    
+
     // Check proof of work matches claimed amount
     if (pblock->GetPoWHash() > bnTarget) {
         if (Params().MineBlocksOnDemand())
             return false;
-        else
+        else if (pblock->GetHash() == Params().HashGenesisBlock() && Params().NetworkID() == CBaseChainParams::MAIN) {
+            LogPrintf("CheckProofOfWork() : accepting genesis block\n");
+            return true;
+        } else
             return error("CheckProofOfWork() : hash doesn't match nBits");
     }
 

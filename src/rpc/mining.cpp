@@ -203,6 +203,7 @@ UniValue setminingalgo(const UniValue& params, bool fHelp)
     if (algo <= POS || algo >= ALGO_COUNT)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid algorithm");
 
+    GenerateBitcoins(false, nullptr, 0);
     LOCK(cs_main);
     nCreateBlockAlgo = algo;
 
@@ -270,9 +271,9 @@ UniValue gethashespersec(const UniValue& params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("gethashespersec", "") + HelpExampleRpc("gethashespersec", ""));
 
-    if (GetTimeMillis() - nHPSTimerStart > 8000)
+    if (GetTimeMillis() - nHPSTimerStart > 60000)
         return (int64_t)0;
-    return (int64_t)dHashesPerSec;
+    return (int64_t)(dHashesPerMin / 60);
 }
 #endif
 
@@ -618,7 +619,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("capabilities", aCaps));
-    result.push_back(Pair("version", pblock->nVersion));
+    result.push_back(Pair("version", (uint64_t)pblock->nVersion));
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
     result.push_back(Pair("coinbaseaux", aux));

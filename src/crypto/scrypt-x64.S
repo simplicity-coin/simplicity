@@ -38,7 +38,7 @@
     .section .note.GNU-stack,"",%progbits
 #endif
 
-#if defined(__x86_64__)
+#if /*defined(USE_ASM) &&*/ defined(__x86_64__)
 
     .text
     .p2align 6
@@ -2224,9 +2224,9 @@ scrypt_core_xmm_loop2:
     ret
 
 
-#if defined(ENABLE_AVX2)
+#if defined(ENABLE_AVX)
 
-#endif /* USE_AVX */
+#endif /* ENABLE_AVX */
 
     .text
     .p2align 6
@@ -2258,7 +2258,7 @@ _scrypt_core_3way:
     subq    $392, %rsp
 
 
-#if !defined(ENABLE_AVX2)
+#if !defined(ENABLE_AVX)
     jmp scrypt_core_3way_xmm
 #else
     /* Check for AVX and OSXSAVE support */
@@ -2273,7 +2273,7 @@ _scrypt_core_3way:
     andl    $0x00000006, %eax
     cmpl    $0x00000006, %eax
     jne scrypt_core_3way_xmm
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
     /* Check for XOP support */
     movl    $0x80000001, %eax
     cpuid
@@ -5311,7 +5311,7 @@ scrypt_core_3way_avx_loop2:
     popq    %rbx
     ret
 
-#if defined(USE_XOP)
+#if defined(ENABLE_XOP)
 
 
     .p2align 6
@@ -7575,8 +7575,8 @@ scrypt_core_3way_xop_loop2:
     popq    %rbp
     popq    %rbx
     ret
-#endif /* USE_XOP */
-#endif /* USE_AVX */
+#endif /* ENABLE_XOP */
+#endif /* ENABLE_AVX */
 
 
 
@@ -14401,6 +14401,6 @@ scrypt_core_6way_avx2_loop2:
     popq    %rbx
     ret
 
-#endif /* USE_AVX2 */
+#endif /* ENABLE_AVX2 */
 
 #endif

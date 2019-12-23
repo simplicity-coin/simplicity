@@ -3,13 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "crypto/sha256.h"
+#include "crypto/scrypt_opt.h"
 
 #include "crypto/common.h"
 
 #include <string.h>
 
 // Internal implementation code.
-namespace
+/*namespace
 {
 /// Internal SHA-256 implementation.
 namespace sha256
@@ -19,19 +20,19 @@ uint32_t inline Maj(uint32_t x, uint32_t y, uint32_t z) { return (x & y) | (z & 
 uint32_t inline Sigma0(uint32_t x) { return (x >> 2 | x << 30) ^ (x >> 13 | x << 19) ^ (x >> 22 | x << 10); }
 uint32_t inline Sigma1(uint32_t x) { return (x >> 6 | x << 26) ^ (x >> 11 | x << 21) ^ (x >> 25 | x << 7); }
 uint32_t inline sigma0(uint32_t x) { return (x >> 7 | x << 25) ^ (x >> 18 | x << 14) ^ (x >> 3); }
-uint32_t inline sigma1(uint32_t x) { return (x >> 17 | x << 15) ^ (x >> 19 | x << 13) ^ (x >> 10); }
+uint32_t inline sigma1(uint32_t x) { return (x >> 17 | x << 15) ^ (x >> 19 | x << 13) ^ (x >> 10); }*/
 
 /** One round of SHA-256. */
-void inline Round(uint32_t a, uint32_t b, uint32_t c, uint32_t& d, uint32_t e, uint32_t f, uint32_t g, uint32_t& h, uint32_t k, uint32_t w)
+/*void inline Round(uint32_t a, uint32_t b, uint32_t c, uint32_t& d, uint32_t e, uint32_t f, uint32_t g, uint32_t& h, uint32_t k, uint32_t w)
 {
     uint32_t t1 = h + Sigma1(e) + Ch(e, f, g) + k + w;
     uint32_t t2 = Sigma0(a) + Maj(a, b, c);
     d += t1;
     h = t1 + t2;
-}
+}*/
 
 /** Initialize SHA-256 state. */
-void inline Initialize(uint32_t* s)
+/*void inline Initialize(uint32_t* s)
 {
     s[0] = 0x6a09e667ul;
     s[1] = 0xbb67ae85ul;
@@ -41,10 +42,10 @@ void inline Initialize(uint32_t* s)
     s[5] = 0x9b05688cul;
     s[6] = 0x1f83d9abul;
     s[7] = 0x5be0cd19ul;
-}
+}*/
 
 /** Perform one SHA-256 transformation, processing a 64-byte chunk. */
-void Transform(uint32_t* s, const unsigned char* chunk)
+/*void Transform(uint32_t* s, const unsigned char* chunk)
 {
     uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];
     uint32_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;
@@ -128,14 +129,15 @@ void Transform(uint32_t* s, const unsigned char* chunk)
 }
 
 } // namespace sha256
-} // namespace
+}*/ // namespace
 
 
 ////// SHA-256
 
 CSHA256::CSHA256() : bytes(0)
 {
-    sha256::Initialize(s);
+    //sha256::Initialize(s);
+    sha256_init(s);
 }
 
 CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
@@ -147,12 +149,14 @@ CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
         memcpy(buf + bufsize, data, 64 - bufsize);
         bytes += 64 - bufsize;
         data += 64 - bufsize;
-        sha256::Transform(s, buf);
+        //sha256::Transform(s, buf);
+        sha256_transform(s, (uint32_t*)buf, 1);
         bufsize = 0;
     }
     while (end >= data + 64) {
         // Process full chunks directly from the source.
-        sha256::Transform(s, data);
+        //sha256::Transform(s, data);
+        sha256_transform(s, (uint32_t*)data, 1);
         bytes += 64;
         data += 64;
     }
@@ -184,6 +188,7 @@ void CSHA256::Finalize(unsigned char hash[OUTPUT_SIZE])
 CSHA256& CSHA256::Reset()
 {
     bytes = 0;
-    sha256::Initialize(s);
+    //sha256::Initialize(s);
+    sha256_init(s);
     return *this;
 }

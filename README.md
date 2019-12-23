@@ -1,7 +1,7 @@
 Simplicity integration/staging repository
 =====================================
 
-[![Build Status](https://travis-ci.org/Simplicity-Project/Simplicity.svg?branch=master)](https://travis-ci.org/Simplicity-Project/Simplicity) [![GitHub version](https://badge.fury.io/gh/Simplicity-Project%2FSimplicity.svg)](https://badge.fury.io/gh/Simplicity-Project%2FSimplicity)
+[![Build Status](https://travis-ci.com/simplicity-coin/simplicity.svg?branch=master)](https://travis-ci.com/simplicity-coin/simplicity) [![GitHub version](https://badge.fury.io/gh/simplicity-coin%2Fsimplicity.svg)](https://badge.fury.io/gh/simplicity-coin%2Fsimplicity)
 
 Simplicity is an open source crypto-currency focused on fast transactions, with low transaction fees & environmental footprint. It utilizes multi algo PoW, PoS, and several masternode tiers for securing its network. The goal of Simplicity is to achieve a decentralized sustainable crypto currency with near instant transactions, fair governance and community intelligence.
 - Fast transactions featuring guaranteed zero confirmation transactions, we call it _SwiftX_.

@@ -2095,7 +2095,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos)
 
     // Check the header
     // treat PoW and PoS blocks the same - don't waste time on redundant PoW checks that won't catch invalid PoS blocks anyway
-    if (block.GetHash() != Params().HashGenesisBlock() && block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
+    if (block.IsProofOfWork() && CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED && !CheckProofOfWork(&block))
         return error("ReadBlockFromDisk : Errors in block header");
 
     return true;
@@ -3079,7 +3079,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         // return state.DoS(100, error("ConnectBlock() : PoW period ended"),
             // REJECT_INVALID, "PoW-ended");
 
-    if (block.nVersion < Params().WALLET_UPGRADE_VERSION() && /*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
+    if ((fVerifyingBlocks || fReindex || block.nVersion < Params().WALLET_UPGRADE_VERSION()) && /*block.GetHash() != Params().HashGenesisBlock() &&*/ !CheckWork(block, pindex->pprev))
         return false;
 
     if (block.IsProofOfStake()) {
@@ -3582,14 +3582,13 @@ void static UpdateTip(CBlockIndex* pindexNew)
         int nUpgraded = 0;
         const CBlockIndex* pindex = chainActive.Tip();
         for (int i = 0; i < 100 && pindex != NULL; i++) {
-            if (pindex->nVersion > ALGO_POW_SCRYPT_SQUARED)
+            if (pindex->nVersion > (uint32_t)ALGO_POW_SCRYPT_SQUARED)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            LogPrintf("%s: %d of last 100 blocks above version %d\n", __func__, nUpgraded, ALGO_POW_SCRYPT_SQUARED);
-        if (nUpgraded > 100/2)
-        {
+            LogPrintf("%s: %i of last 100 blocks above version %u\n", __func__, nUpgraded, ALGO_POW_SCRYPT_SQUARED);
+        if (nUpgraded > 100/2) {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
@@ -4320,7 +4319,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
         return state.DoS(100, error("%s : block %s has an invalid type", __func__, block.GetHash().GetHex()));
 
     // Check proof of work matches claimed amount
-    if (block.GetHash() != Params().HashGenesisBlock() && (fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
+    if ((fVerifyingBlocks || fReindex || block.nTime >= nBlockCheckTime || CBlockHeader::GetAlgo(block.nVersion) != POW_SCRYPT_SQUARED) && fCheckPOW && block.IsProofOfWork() && !CheckProofOfWork(&block))
         return state.DoS(50, error("%s : proof of work failed", __func__),
             REJECT_INVALID, "high-hash");
 
@@ -4544,7 +4543,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
         if (Params().NetworkID() != CBaseChainParams::REGTEST && nHeight >= 10 + Params().WALLET_UPGRADE_BLOCK() + Params().COINSTAKE_MIN_DEPTH()) {
             int end = std::max(std::min(nHeight - 9 - Params().WALLET_UPGRADE_BLOCK() - Params().COINSTAKE_MIN_DEPTH(), 10), 0); // start checking one more at a time until we can enforce on all new blocks
-            int typeCount[ALGO_COUNT] = { };
+            int typeCount[ALGO_COUNT] = {};
             //int proofOfWorkCount = 0;
             if (CBlockHeader::GetAlgo(block.nVersion) == -1)
                 return false;
@@ -4616,7 +4615,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.DoS(0, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
     // Reject block.nVersion=1, ..., CURRENT_VERSION-1 blocks when 95% (75% on testnet) of the network has upgraded:
-    for (int version = 2; version <= CBlockHeader::CURRENT_VERSION; version++) {
+    for (unsigned int version = 2; version <= CBlockHeader::CURRENT_VERSION; version++) {
         if (block.nVersion < version && CBlockIndex::IsSuperMajority(version, pindexPrev, Params().RejectBlockOutdatedMajority())) {
             return state.Invalid(error("%s : rejected nVersion=%d block", __func__, block.nVersion), REJECT_OBSOLETE, "bad-version");
         }
@@ -4693,7 +4692,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return true;
         }
 
-        if (block.nVersion >= Params().WALLET_UPGRADE_VERSION() && !CheckBlockHeader(block, state, !fAlreadyCheckedHeader)) {
+        if (!CheckBlockHeader(block, state, !fAlreadyCheckedHeader && (block.nNonce != 0 || block.nVersion >= Params().WALLET_UPGRADE_VERSION()))) { //nNonce = 0 for PoS blocks
             LogPrintf("%s : CheckBlockHeader failed\n", __func__);
             return false;
         }
@@ -4792,7 +4791,7 @@ static bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** pp
     return true;
 }
 
-bool CBlockIndex::IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
+bool CBlockIndex::IsSuperMajority(unsigned int minVersion, const CBlockIndex* pstart, unsigned int nRequired)
 {
     unsigned int nToCheck = Params().ToCheckBlockUpgradeMajority();
     unsigned int nFound = 0;
@@ -4886,7 +4885,7 @@ bool ProcessNewBlock(CValidationState& state, CNode* pfrom, CBlock* pblock, bool
     if (!ActivateBestChain(state, pblock, checked))
         return error("%s : ActivateBestChain failed", __func__);
 
-    LogPrintf("%s : ACCEPTED Block %ld in %ld milliseconds with size=%d\n", __func__, GetHeight(), GetTimeMillis() - nStartTime,
+    LogPrint("net", "%s : ACCEPTED Block %ld in %ld milliseconds with size=%d\n", __func__, GetHeight(), GetTimeMillis() - nStartTime,
               pblock->GetSerializeSize(SER_DISK, CLIENT_VERSION));
 
     return true;
@@ -6616,7 +6615,6 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
         }
 
         if (GetBoolArg("-headerspamfilter", DEFAULT_HEADER_SPAM_FILTER) && !IsInitialBlockDownload()) {
-            LOCK(cs_main);
             CValidationState state;
             CNodeState *nodestate = State(pfrom->GetId());
             nodestate->headers.addHeaders(nFirst, nLast);

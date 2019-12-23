@@ -108,7 +108,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     if (!pblocktemplate.get())
         return NULL;
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
-    int ver = 0;
+    uint32_t ver = 0;
 
     // Tip
     CBlockIndex* pindexPrev = nullptr;
@@ -475,7 +475,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
-        LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
+        LogPrint("simplicity", "CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
         if (!fProofOfStake) {
@@ -581,7 +581,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 //
 // Internal miner
 //
-double dHashesPerSec = 0.0;
+double dHashesPerMin = 0.0;
 int64_t nHPSTimerStart = 0;
 
 CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey, CWallet* pwallet)
@@ -647,179 +647,224 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("simplicity-miner");
 
+    // Build buffer and check for memory availability
+    bool memory = true;
+    unsigned char *scratchbuf = nullptr;
+    if (nCreateBlockAlgo == POW_SCRYPT_SQUARED) {
+        scratchbuf = scrypt_buffer_alloc(1048576);
+        if (!scratchbuf) {
+            memory = false;
+            LogPrintf("Failed to allocate memory for scrypt² mining thread!\n");
+        }
+    }
+
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
     bool fLastLoopOrphan = false;
-    while (fGenerateBitcoins || fProofOfStake) {
-        if (fProofOfStake) {
-            //control the amount of times the client will check for mintable coins
-            if ((GetTime() - nMintableLastCheck > 5 * 60)) // 5 minute check time
-            {
-                nMintableLastCheck = GetTime();
-                fMintableCoins = pwallet->MintableCoins();
-            }
-
-            if (chainActive.Height() + 1 < Params().WALLET_UPGRADE_BLOCK() && Params().NetworkID() == CBaseChainParams::MAIN) {
-                MilliSleep(5000);
-                continue; // Do not stake until the upgrade block
-            }
-
-            while (pwallet->IsLocked() || !fMintableCoins || (pwallet->GetBalance() > 0 && nReserveBalance >= pwallet->GetBalance()) ||
-                   ((vNodes.empty() || masternodeSync.NotCompleted()) && Params().MiningRequiresPeers())) {
-                nLastCoinStakeSearchInterval = 0;
-                MilliSleep(5000);
-                // Do a separate 1 minute check here to ensure fMintableCoins is updated
-                if (!fMintableCoins && (GetTime() - nMintableLastCheck > 1 * 60)) // 1 minute check time
+    try {
+        while ((fGenerateBitcoins && memory) || fProofOfStake) {
+            if (fProofOfStake) {
+                //control the amount of times the client will check for mintable coins
+                if ((GetTime() - nMintableLastCheck > 5 * 60)) // 5 minute check time
                 {
                     nMintableLastCheck = GetTime();
                     fMintableCoins = pwallet->MintableCoins();
                 }
-            }
 
-            //search our map of hashed blocks, see if bestblock has been hashed yet
-            if (mapHashedBlocks.count(chainActive.Tip()->nHeight) && !fLastLoopOrphan)
-            {
-                // wait half of the nHashDrift with max wait of 3 minutes
-                if (GetTime() - mapHashedBlocks[chainActive.Tip()->nHeight] < std::max(pwallet->nHashInterval, (unsigned int)1))
-                {
+                if (chainActive.Height() + 1 < Params().WALLET_UPGRADE_BLOCK() && Params().NetworkID() == CBaseChainParams::MAIN) {
                     MilliSleep(5000);
-                    continue;
-                }
-            }
-        }
-
-        MilliSleep(1000);
-
-        //
-        // Create new block
-        //
-        unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        if (!pindexPrev)
-            continue;
-
-        std::unique_ptr<CBlockTemplate> pblocktemplate(
-                fProofOfStake ? CreateNewBlock(CScript(), pwallet, fProofOfStake) : CreateNewBlockWithKey(reservekey, pwallet)
-                        );
-        if (!pblocktemplate.get())
-            continue;
-
-        CBlock* pblock = &pblocktemplate->block;
-        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
-
-        //Stake miner main
-        if (fProofOfStake) {
-            LogPrintf("CPUMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str());
-            if (pblock->IsZerocoinStake()) {
-                //Find the key associated with the zerocoin that is being staked
-                libzerocoin::CoinSpend spend = TxInToZerocoinSpend(pblock->vtx[1].vin[0]);
-                CBigNum bnSerial = spend.getCoinSerialNumber();
-                CKey key;
-                if (!pwallet->GetZerocoinKey(bnSerial, key)) {
-                    LogPrintf("%s: failed to find zSPL with serial %s, unable to sign block\n", __func__, bnSerial.GetHex());
-                    continue;
+                    continue; // Do not stake until the upgrade block
                 }
 
-                //Sign block with the zSPL key
-                if (!SignBlockWithKey(*pblock, key)) {
-                    LogPrintf("%s: Signing new block with zSPL key failed\n", __func__);
-                    continue;
+                while (pwallet->IsLocked() || !fMintableCoins || (pwallet->GetBalance() > 0 && nReserveBalance >= pwallet->GetBalance()) ||
+                       ((vNodes.empty() || masternodeSync.NotCompleted()) && Params().MiningRequiresPeers())) {
+                    nLastCoinStakeSearchInterval = 0;
+                    MilliSleep(5000);
+                    // Do a separate 1 minute check here to ensure fMintableCoins is updated
+                    if (!fMintableCoins && (GetTime() - nMintableLastCheck > 1 * 60)) // 1 minute check time
+                    {
+                        nMintableLastCheck = GetTime();
+                        fMintableCoins = pwallet->MintableCoins();
+                    }
                 }
-            } else if (!SignBlock(*pblock, *pwallet)) {
-                LogPrintf("%s: Signing new block with UTXO key failed\n", __func__);
-                continue;
-            }
 
-            LogPrintf("CPUMiner : proof-of-stake block was signed %s\n", pblock->GetHash().ToString().c_str());
-            SetThreadPriority(THREAD_PRIORITY_NORMAL);
-            if (!ProcessBlockFound(pblock, *pwallet, reservekey)) {
-                fLastLoopOrphan = true;
-                continue;
-            }
-            SetThreadPriority(THREAD_PRIORITY_LOWEST);
-
-            continue;
-        }
-
-        LogPrintf("Running SimplicityMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
-            ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
-
-        //
-        // Search
-        //
-        int64_t nStart = GetTime();
-        uint256 hashTarget = uint256().SetCompact(pblock->nBits);
-        while (true) {
-            unsigned int nHashesDone = 0;
-
-            uint256 hash;
-            while (true) {
-                hash = pblock->GetPoWHash();
-                if (hash <= hashTarget) {
-                    // Found a solution
-                    SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                    LogPrintf("%s:\n", __func__);
-                    LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-                    ProcessBlockFound(pblock, *pwallet, reservekey);
-                    SetThreadPriority(THREAD_PRIORITY_LOWEST);
-
-                    // In regression test mode, stop mining after a block is found. This
-                    // allows developers to controllably generate a block on demand.
-                    if (Params().MineBlocksOnDemand())
-                        throw boost::thread_interrupted();
-
-                    break;
-                }
-                pblock->nNonce += 1;
-                nHashesDone += 1;
-                if ((pblock->nNonce & 0xFF) == 0)
-                    break;
-            }
-
-            // Meter hashes/sec
-            static int64_t nHashCounter;
-            if (nHPSTimerStart == 0) {
-                nHPSTimerStart = GetTimeMillis();
-                nHashCounter = 0;
-            } else
-                nHashCounter += nHashesDone;
-            if (GetTimeMillis() - nHPSTimerStart > 4000) {
-                static CCriticalSection cs;
+                //search our map of hashed blocks, see if bestblock has been hashed yet
+                if (mapHashedBlocks.count(chainActive.Tip()->nHeight) && !fLastLoopOrphan)
                 {
-                    LOCK(cs);
-                    if (GetTimeMillis() - nHPSTimerStart > 4000) {
-                        dHashesPerSec = 1000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
-                        nHPSTimerStart = GetTimeMillis();
-                        nHashCounter = 0;
-                        static int64_t nLogTime;
-                        if (GetTime() - nLogTime > 30 * 60) {
-                            nLogTime = GetTime();
-                            LogPrintf("hashmeter %6.0f khash/s\n", dHashesPerSec / 1000.0);
-                        }
+                    // wait half of the nHashDrift with max wait of 3 minutes
+                    if (GetTime() - mapHashedBlocks[chainActive.Tip()->nHeight] < std::max(pwallet->nHashInterval, (unsigned int)1))
+                    {
+                        MilliSleep(5000);
+                        continue;
                     }
                 }
             }
 
-            // Check for stop or if block needs to be rebuilt
-            boost::this_thread::interruption_point();
-            // Regtest mode doesn't require peers
-            if (vNodes.empty() && Params().MiningRequiresPeers())
-                break;
-            if (pblock->nNonce >= 0xffff0000)
-                break;
-            if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
-                break;
-            if (pindexPrev != chainActive.Tip())
-                break;
+            //MilliSleep(1000);
 
-            // Update nTime every few seconds
-            UpdateTime(pblock, pindexPrev, pblock->IsProofOfStake());
-            if (Params().AllowMinDifficultyBlocks()) {
-                // Changing pblock->nTime can change work required on testnet:
-                hashTarget.SetCompact(pblock->nBits);
+            //
+            // Create new block
+            //
+            unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+            CBlockIndex* pindexPrev = chainActive.Tip();
+            if (!pindexPrev)
+                continue;
+
+            std::unique_ptr<CBlockTemplate> pblocktemplate(
+                    fProofOfStake ? CreateNewBlock(CScript(), pwallet, fProofOfStake) : CreateNewBlockWithKey(reservekey, pwallet)
+                            );
+            if (!pblocktemplate.get())
+                continue;
+
+            CBlock* pblock = &pblocktemplate->block;
+            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+
+            //Stake miner main
+            if (fProofOfStake) {
+                LogPrintf("CPUMiner : proof-of-stake block found %s\n", pblock->GetHash().ToString().c_str());
+                if (pblock->IsZerocoinStake()) {
+                    //Find the key associated with the zerocoin that is being staked
+                    libzerocoin::CoinSpend spend = TxInToZerocoinSpend(pblock->vtx[1].vin[0]);
+                    CBigNum bnSerial = spend.getCoinSerialNumber();
+                    CKey key;
+                    if (!pwallet->GetZerocoinKey(bnSerial, key)) {
+                        LogPrintf("%s: failed to find zSPL with serial %s, unable to sign block\n", __func__, bnSerial.GetHex());
+                        continue;
+                    }
+
+                    //Sign block with the zSPL key
+                    if (!SignBlockWithKey(*pblock, key)) {
+                        LogPrintf("%s: Signing new block with zSPL key failed\n", __func__);
+                        continue;
+                    }
+                } else if (!SignBlock(*pblock, *pwallet)) {
+                    LogPrintf("%s: Signing new block with UTXO key failed\n", __func__);
+                    continue;
+                }
+
+                LogPrintf("CPUMiner : proof-of-stake block was signed %s\n", pblock->GetHash().ToString().c_str());
+                SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                if (!ProcessBlockFound(pblock, *pwallet, reservekey)) {
+                    fLastLoopOrphan = true;
+                    continue;
+                }
+                SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
+                continue;
+            }
+
+            LogPrint("simplicity", "Running SimplicityMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
+                ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
+
+            //
+            // Search
+            //
+            int64_t nStart = GetTime();
+            uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+            while (true) {
+                unsigned int nHashesDone = 0;
+
+                if (nCreateBlockAlgo == POW_SCRYPT_SQUARED) {
+                    unsigned int runs = 0;
+                    while (true) {
+                        int nHashes = 0;
+                        if (scrypt_N_1_1_256_multi(BEGIN(pblock->nVersion), hashTarget, &nHashes, scratchbuf, 1048576)) {
+                            // Found a solution
+                            SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                            LogPrintf("%s:\n", __func__);
+                            LogPrintf("proof-of-work found\n   hash: %s\n target: %s\n  nonce: %i\n", pblock->GetPoWHash().GetHex(), hashTarget.GetHex(), pblock->nNonce);
+                            ProcessBlockFound(pblock, *pwallet, reservekey);
+                            SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
+                            // In regression test mode, stop mining after a block is found. This
+                            // allows developers to controllably generate a block on demand.
+                            if (Params().MineBlocksOnDemand())
+                                throw boost::thread_interrupted();
+
+                            break;
+                        }
+                        pblock->nNonce += nHashes;
+                        nHashesDone += nHashes;
+                        if (runs & 0x1)
+                            break;
+                        runs++;
+                    }
+                } else {
+                    uint256 hash;
+                    while (true) {
+                        hash = pblock->GetPoWHash();
+                        if (hash <= hashTarget) {
+                            // Found a solution
+                            SetThreadPriority(THREAD_PRIORITY_NORMAL);
+                            LogPrintf("%s:\n", __func__);
+                            LogPrintf("proof-of-work found\n   hash: %s\n target: %s\n  nonce: %i\n", hash.GetHex(), hashTarget.GetHex(), pblock->nNonce);
+                            ProcessBlockFound(pblock, *pwallet, reservekey);
+                            SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
+                            // In regression test mode, stop mining after a block is found. This
+                            // allows developers to controllably generate a block on demand.
+                            if (Params().MineBlocksOnDemand())
+                                throw boost::thread_interrupted();
+
+                            break;
+                        }
+                        pblock->nNonce += 1;
+                        nHashesDone += 1;
+                        if ((pblock->nNonce & 0xFF) == 0)
+                            break;
+                    }
+                }
+
+                // Meter hashes/sec
+                static int64_t nHashCounter;
+                {
+                    static CCriticalSection cs;
+                    {
+                        LOCK(cs);
+                        if (nHPSTimerStart == 0) {
+                            nHPSTimerStart = GetTimeMillis();
+                            nHashCounter = 0;
+                        } else
+                            nHashCounter += nHashesDone;
+
+                        if (GetTimeMillis() - nHPSTimerStart > 30000) {
+                            dHashesPerMin = 60000.0 * nHashCounter / (GetTimeMillis() - nHPSTimerStart);
+                            nHPSTimerStart = GetTimeMillis();
+                            nHashCounter = 0;
+                            static int64_t nLogTime;
+                            if (GetTime() - nLogTime > 120) {
+                                nLogTime = GetTime();
+                                LogPrintf("Total local hashrate %6.1f khash/min\n", dHashesPerMin/1000.0);
+                            }
+                        }
+                    }
+                }
+
+                // Check for stop or if block needs to be rebuilt
+                boost::this_thread::interruption_point();
+                // Regtest mode doesn't require peers
+                if (vNodes.empty() && Params().MiningRequiresPeers())
+                    break;
+                if (pblock->nNonce >= 0xffff0000)
+                    break;
+                if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
+                    break;
+                if (pindexPrev != chainActive.Tip())
+                    break;
+
+                // Update nTime every few seconds
+                UpdateTime(pblock, pindexPrev, fProofOfStake);
+                if (Params().AllowMinDifficultyBlocks()) {
+                    // Changing pblock->nTime can change work required on testnet:
+                    hashTarget.SetCompact(pblock->nBits);
+                }
             }
         }
+    } catch (boost::thread_interrupted) {
+        free(scratchbuf);
+        //LogPrintf("SimplicityMiner terminated\n");
+        throw boost::thread_interrupted();
     }
 }
 
@@ -831,9 +876,9 @@ void static ThreadBitcoinMiner(void* parg)
         BitcoinMiner(pwallet, false);
         boost::this_thread::interruption_point();
     } catch (std::exception& e) {
-        LogPrintf("SimplicityMiner exception");
+        LogPrintf("SimplicityMiner exception\n");
     } catch (...) {
-        LogPrintf("SimplicityMiner exception");
+        LogPrintf("SimplicityMiner exception\n");
     }
 
     LogPrintf("SimplicityMiner exiting\n");

@@ -3,7 +3,7 @@ AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 2)
 define(_CLIENT_VERSION_MINOR, 0)
 define(_CLIENT_VERSION_REVISION, 1)
-define(_CLIENT_VERSION_BUILD, 1)
+define(_CLIENT_VERSION_BUILD, 2)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2019)
 AC_INIT([Simplicity],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[www.simplicity.org],[simplicity])
@@ -57,6 +57,9 @@ dnl we have those under control, re-enable that functionality.
 case $host in
   *mingw*)
      lt_cv_deplibs_check_method="pass_all"
+  ;;
+  *aarch64*)
+     CFLAGS="$CFLAGS -march=armv8.1-a+crypto"
   ;;
 esac
 dnl Require C++11 compiler (no GNU extensions)
@@ -189,7 +192,6 @@ AC_ARG_ENABLE([asm],
 
 if test "x$use_asm" = xyes; then
   AC_DEFINE(USE_ASM, 1, [Define this symbol to build in assembly routines])
-  AC_DEFINE(USE_XOP, 1, [Define this symbol to enable optimization])
 fi
 
 AC_ARG_WITH([system-univalue],
@@ -326,7 +328,9 @@ fi
 # compatibility.
 AX_CHECK_COMPILE_FLAG([-msse4.2],[[SSE42_CXXFLAGS="-msse4.2"]],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-msse4.1],[[SSE41_CXXFLAGS="-msse4.1"]],,[[$CXXFLAG_WERROR]])
-AX_CHECK_COMPILE_FLAG([-mavx -mavx2],[[AVX2_CXXFLAGS="-mavx -mavx2"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-mavx],[[AVX_CXXFLAGS="-mavx"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-mxop],[[XOP_CXXFLAGS="-mxop"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-mavx2],[[AVX2_CXXFLAGS="-mavx2"]],,[[$CXXFLAG_WERROR]])
 AX_CHECK_COMPILE_FLAG([-msse4 -msha],[[SHANI_CXXFLAGS="-msse4 -msha"]],,[[$CXXFLAG_WERROR]])
 
 TEMP_CXXFLAGS="$CXXFLAGS"
@@ -367,6 +371,30 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $AVX_CXXFLAGS"
+AC_MSG_CHECKING(for AVX intrinsics)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdint.h>
+    #include <immintrin.h>
+  ]],[[
+    __m256i l = _mm256_set1_epi32(0);
+    return _mm256_extract_epi32(l, 7);
+  ]])],
+ [ AC_MSG_RESULT(yes); enable_avx=yes; AC_DEFINE(ENABLE_AVX, 1, [Define this symbol to build code that uses AVX intrinsics]) ],
+ [ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $XOP_CXXFLAGS"
+AC_MSG_CHECKING(for XOP intrinsics)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([asm ("vprotd \$7, %xmm0, %xmm1");])],
+ [ AC_MSG_RESULT(yes); enable_xop=yes; AC_DEFINE(ENABLE_XOP, 1, [Define this symbol to build code that uses XOP intrinsics]) ],
+ [ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $AVX2_CXXFLAGS"
 AC_MSG_CHECKING(for AVX2 intrinsics)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -374,7 +402,8 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
     #include <immintrin.h>
   ]],[[
     __m256i l = _mm256_set1_epi32(0);
-    return _mm256_extract_epi32(l, 7);
+    __m256i m = _mm256_add_epi32(l, l);
+    return _mm256_extract_epi32(m, 7);
   ]])],
  [ AC_MSG_RESULT(yes); enable_avx2=yes; AC_DEFINE(ENABLE_AVX2, 1, [Define this symbol to build code that uses AVX2 intrinsics]) ],
  [ AC_MSG_RESULT(no)]
@@ -1334,6 +1363,8 @@ AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 AM_CONDITIONAL([ENABLE_HWCRC32],[test x$enable_hwcrc32 = xyes])
 AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
+AM_CONDITIONAL([ENABLE_AVX],[test x$enable_avx = xyes])
+AM_CONDITIONAL([ENABLE_XOP],[test x$enable_xop = xyes])
 AM_CONDITIONAL([ENABLE_AVX2],[test x$enable_avx2 = xyes])
 AM_CONDITIONAL([ENABLE_SHANI],[test x$enable_shani = xyes])
 AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
@@ -1373,6 +1404,8 @@ AC_SUBST(SANITIZER_CXXFLAGS)
 AC_SUBST(SANITIZER_LDFLAGS)
 AC_SUBST(SSE42_CXXFLAGS)
 AC_SUBST(SSE41_CXXFLAGS)
+AC_SUBST(AVX_CXXFLAGS)
+AC_SUBST(XOP_CXXFLAGS)
 AC_SUBST(AVX2_CXXFLAGS)
 AC_SUBST(SHANI_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
