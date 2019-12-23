@@ -27,7 +27,7 @@
 #include "crypto/sha512.h"
 #include "crypto/scrypt.h"
 #include "crypto/scrypt_opt.h"
-#include "crypto/argon2/argon2.h"
+#include "crypto/argon2/include/argon2.h"
 #include "crypto/RandomX/src/randomx.h"
 
 #include <iomanip>

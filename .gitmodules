@@ -1,3 +1,6 @@
 [submodule "src/crypto/RandomX"]
 	path = src/crypto/RandomX
 	url = https://github.com/tevador/RandomX
+[submodule "src/crypto/argon2"]
+	path = src/crypto/argon2
+	url = https://github.com/P-H-C/phc-winner-argon2
