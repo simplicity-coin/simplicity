@@ -18,6 +18,7 @@
 #include "amount.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
+#include "crypto/RandomX/src/randomx.h"
 #include "httpserver.h"
 #include "httprpc.h"
 #include "invalid.h"
@@ -829,6 +830,21 @@ bool AppInitBasicSetup()
     return true;
 }
 
+/////////////////////////////////////////////////////////////
+bool softAes, miningMode, verificationMode, help, largePages, 
+     jit, secure, ssse3, avx2, autoFlags;
+int noncesCount, threadCount, initThreadCount;
+uint64_t threadAffinity;
+int32_t seedValue;
+char seed[4];
+std::vector<randomx_vm*> vms;
+std::vector<std::thread> threads;
+randomx_dataset* dataset;
+randomx_cache* cache;
+randomx_flags flags;
+//randomx_vm *vm = nullptr;
+/////////////////////////////////////////////////////////////
+
 /** Initialize simplicity.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -1048,6 +1064,24 @@ bool AppInit2()
     }
 
     nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
+
+    // ********************************************************* Step 3.5: Initialize RandomX
+
+    initThreadCount = boost::thread::hardware_concurrency();
+    flags = randomx_get_flags();
+    cache = randomx_alloc_cache(flags);
+    if (cache == nullptr) {
+        StartShutdown();
+    }
+
+    randomx_init_cache(cache, &seed, sizeof(seed));
+    vm = randomx_create_vm(flags, cache, dataset);
+    vms.push_back(vm);
+    if (vm == nullptr) {
+        StartShutdown();
+    }
+
+    LogPrintf("RandomX successfully initialized!\n");
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 

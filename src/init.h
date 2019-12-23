@@ -7,6 +7,7 @@
 #ifndef BITCOIN_INIT_H
 #define BITCOIN_INIT_H
 
+#include "crypto/RandomX/src/randomx.h"
 #include <string>
 
 class CScheduler;
@@ -45,5 +46,7 @@ enum HelpMessageMode {
 std::string HelpMessage(HelpMessageMode mode);
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
+
+extern randomx_vm *vm;
 
 #endif // BITCOIN_INIT_H

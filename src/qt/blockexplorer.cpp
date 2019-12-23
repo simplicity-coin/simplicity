@@ -255,6 +255,9 @@ std::string BlockToString(CBlockIndex* pBlock)
         case POW_ARGON2D:
             type = "proof of work - argon2d4096";
             break;
+        case POW_RANDOMX:
+            type = "proof of work - randomx";
+            break;
     }
 
     std::string BlockContentCells[] =

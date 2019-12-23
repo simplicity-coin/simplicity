@@ -7,6 +7,8 @@
 #include "hash.h"
 #include "crypto/hmac_sha512.h"
 
+randomx_vm *vm = nullptr;
+
 inline uint32_t ROTL32(uint32_t x, int8_t r)
 {
     return (x << r) | (x >> (32 - r));

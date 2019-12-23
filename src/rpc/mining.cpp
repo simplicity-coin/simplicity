@@ -189,7 +189,7 @@ UniValue setminingalgo(const UniValue& params, bool fHelp)
         throw std::runtime_error(
             "setminingalgo algonum\n"
             "\nSet 'algonum' to the number of the algo you'd like to mine.\n"
-            "POW_SHA256D = 1, POW_SCRYPT_SQUARED = 2, POW_SHA1D = 3, POW_ARGON2D = 4.\n"
+            "POW_SHA256D = 1, POW_SCRYPT_SQUARED = 2, POW_SHA1D = 3, POW_ARGON2D = 4, POW_RANDOMX = 5.\n"
 
             "\nArguments:\n"
             "1. algonum         (numeric, required) Set to the number of the algo to create blocks on.\n"

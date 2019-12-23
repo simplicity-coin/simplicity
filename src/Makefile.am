@@ -192,7 +192,70 @@ BITCOIN_CORE_H = \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
-  zmq/zmqpublishnotifier.h
+  zmq/zmqpublishnotifier.h \
+  crypto/RandomX/src/blake2/blake2b.c \
+  crypto/RandomX/src/blake2/blake2.h \
+  crypto/RandomX/src/blake2/blake2-impl.h \
+  crypto/RandomX/src/blake2/blamka-round-avx2.h \
+  crypto/RandomX/src/blake2/blamka-round-ref.h \
+  crypto/RandomX/src/blake2/blamka-round-ssse3.h \
+  crypto/RandomX/src/blake2/endian.h \
+  crypto/RandomX/src/aes_hash.cpp \
+  crypto/RandomX/src/aes_hash.hpp \
+  crypto/RandomX/src/allocator.cpp \
+  crypto/RandomX/src/allocator.hpp \
+  crypto/RandomX/src/argon2_avx2.c \
+  crypto/RandomX/src/argon2_core.c \
+  crypto/RandomX/src/argon2_core.h \
+  crypto/RandomX/src/argon2.h \
+  crypto/RandomX/src/argon2_ref.c \
+  crypto/RandomX/src/argon2_ssse3.c \
+  crypto/RandomX/src/assembly_generator_x86.cpp \
+  crypto/RandomX/src/assembly_generator_x86.hpp \
+  crypto/RandomX/src/blake2_generator.cpp \
+  crypto/RandomX/src/blake2_generator.hpp \
+  crypto/RandomX/src/bytecode_machine.cpp \
+  crypto/RandomX/src/bytecode_machine.hpp \
+  crypto/RandomX/src/common.hpp \
+  crypto/RandomX/src/configuration.h \
+  crypto/RandomX/src/cpu.cpp \
+  crypto/RandomX/src/cpu.hpp \
+  crypto/RandomX/src/dataset.cpp \
+  crypto/RandomX/src/dataset.hpp \
+  crypto/RandomX/src/instruction.cpp \
+  crypto/RandomX/src/instruction.hpp \
+  crypto/RandomX/src/instructions_portable.cpp \
+  crypto/RandomX/src/instruction_weights.hpp \
+  crypto/RandomX/src/intrin_portable.h \
+  crypto/RandomX/src/program.hpp \
+  crypto/RandomX/src/randomx.cpp \
+  crypto/RandomX/src/randomx.h \
+  crypto/RandomX/src/reciprocal.c \
+  crypto/RandomX/src/reciprocal.h \
+  crypto/RandomX/src/soft_aes.cpp \
+  crypto/RandomX/src/soft_aes.h \
+  crypto/RandomX/src/superscalar.cpp \
+  crypto/RandomX/src/superscalar.hpp \
+  crypto/RandomX/src/superscalar_program.hpp \
+  crypto/RandomX/src/virtual_machine.cpp \
+  crypto/RandomX/src/virtual_machine.hpp \
+  crypto/RandomX/src/virtual_memory.cpp \
+  crypto/RandomX/src/virtual_memory.hpp \
+  crypto/RandomX/src/vm_compiled.cpp \
+  crypto/RandomX/src/vm_compiled.hpp \
+  crypto/RandomX/src/vm_compiled_light.cpp \
+  crypto/RandomX/src/vm_compiled_light.hpp \
+  crypto/RandomX/src/vm_interpreted.cpp \
+  crypto/RandomX/src/vm_interpreted.hpp \
+  crypto/RandomX/src/vm_interpreted_light.cpp \
+  crypto/RandomX/src/vm_interpreted_light.hpp\
+  crypto/RandomX/src/jit_compiler_fallback.hpp\
+  crypto/RandomX/src/jit_compiler_x86_static.asm\
+  crypto/RandomX/src/jit_compiler_x86_static.hpp\
+  crypto/RandomX/src/jit_compiler_x86_static.S\
+  crypto/RandomX/src/jit_compiler_x86.cpp\
+  crypto/RandomX/src/jit_compiler_x86.hpp\
+  crypto/RandomX/src/jit_compiler.hpp
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -555,6 +618,18 @@ ARGON2D_DIST += crypto/argon2/ref.h
 ARGON2D_DIST += crypto/argon2/opt.h
 ARGON2D_DIST += crypto/argon2/blamka-round-opt.h
 ARGON2D_DIST += crypto/argon2/blamka-round-ref.h
+
+RANDOMX_DIST = crypto/RandomX/src/jit_compiler_a64_static.hpp
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_a64_static.S
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_a64.cpp
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_a64.hpp
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_fallback.hpp
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_x86_static.asm
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_x86_static.hpp
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_x86_static.S
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_x86.cpp
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler_x86.hpp
+RANDOMX_DIST += crypto/RandomX/src/jit_compiler.hpp
 
 CLEANFILES = $(EXTRA_LIBRARIES)
 

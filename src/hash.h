@@ -11,6 +11,7 @@
 
 #include "crypto/ripemd160.h"
 #include "crypto/sha256.h"
+#include "init.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "util.h"
@@ -27,6 +28,7 @@
 #include "crypto/scrypt.h"
 #include "crypto/scrypt_opt.h"
 #include "crypto/argon2/argon2.h"
+#include "crypto/RandomX/src/randomx.h"
 
 #include <iomanip>
 #include <openssl/sha.h>
@@ -530,6 +532,25 @@ inline uint256 HashArgon2d(const T1 pbegin, const T1 pend)
     argon2d_hash_raw(t_cost, m_cost, parallelism, (pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), pwdlen,
                     (pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), pwdlen, (char*)&result, hashlen);
 
+    return result;
+}
+
+/* ----------- RandomX Hash ------------------------------------------------ */
+template <typename T1>
+inline uint256 HashRandomX(const T1 pbegin, const T1 pend)
+{
+    /*static char seed[4];
+    static randomx_flags flags = randomx_get_flags();
+    static randomx_cache* cache = randomx_alloc_cache(flags);
+    static randomx_dataset* dataset;
+    static randomx_vm *vm = nullptr;
+    if (vm == nullptr) {
+        randomx_init_cache(cache, &seed, sizeof(seed));
+        vm = randomx_create_vm(flags, cache, dataset);
+    }*/
+
+    uint256 result;
+    randomx_calculate_hash(vm, (pbegin == pend ? PBLANK : static_cast<const void*>(&pbegin[0])), (pend - pbegin) * sizeof(pbegin[0]), (char*)&result);
     return result;
 }
 

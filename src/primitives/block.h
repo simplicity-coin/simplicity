@@ -23,6 +23,7 @@ enum BlockType {
     POW_SCRYPT_SQUARED = 2,
     POW_SHA1D = 3,
     POW_ARGON2D = 4,
+    POW_RANDOMX = 5,
     ALGO_COUNT
 };
 
@@ -32,9 +33,10 @@ enum AlgoFlags {
     ALGO_POW_SCRYPT_SQUARED = 3<<29,
     ALGO_POW_SHA1D = 4<<29,
     ALGO_POW_ARGON2D = 5<<29,
+    ALGO_POW_RANDOMX = 6<<29,
     ALGO_VERSION = 7<<29,
     ALGO_POS_VERSION = ALGO_POS,
-    ALGO_POW_VERSION = 6<<29
+    ALGO_POW_VERSION = ALGO_POW_RANDOMX
 };
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
@@ -124,6 +126,8 @@ public:
                 return POW_SHA1D;
             case ALGO_POW_ARGON2D:
                 return POW_ARGON2D;
+            case ALGO_POW_RANDOMX:
+                return POW_RANDOMX;
             default:
                 return -1;
         }
@@ -142,6 +146,8 @@ public:
                 return ALGO_POW_SHA1D;
             case POW_ARGON2D:
                 return ALGO_POW_ARGON2D;
+            case POW_RANDOMX:
+                return ALGO_POW_RANDOMX;
             default:
                 return CBlockHeader::CURRENT_VERSION;
         }
