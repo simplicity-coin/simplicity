@@ -714,8 +714,10 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
             std::unique_ptr<CBlockTemplate> pblocktemplate(
                     fProofOfStake ? CreateNewBlock(CScript(), pwallet, fProofOfStake) : CreateNewBlockWithKey(reservekey, pwallet)
                             );
-            if (!pblocktemplate.get())
+            if (!pblocktemplate.get()) {
+                MilliSleep(30000);
                 continue;
+            }
 
             CBlock* pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
