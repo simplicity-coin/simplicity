@@ -691,9 +691,10 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
             return false;
         }
 
-        if (!AcceptableInputs(mempool, state, CTransaction(tx), false, nullptr)) {
+        if (!AcceptableInputs(mempool, state, CTransaction(tx), false, nullptr, false, false, true)) {
             //set nDos
             state.IsInvalid(nDoS);
+            LogPrint("masternode", "mnb - AcceptableInputs : %s\n", state.GetRejectReason());
             return false;
         }
     }
