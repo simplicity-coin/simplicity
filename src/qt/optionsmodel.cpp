@@ -127,7 +127,7 @@ void OptionsModel::Init()
         addOverriddenOption("-spendzeroconfchange");
 #endif
     if (!settings.contains("nStakeSplitThreshold"))
-        settings.setValue("nStakeSplitThreshold", 1);
+        settings.setValue("nStakeSplitThreshold", 0);
 
 
     // Network
