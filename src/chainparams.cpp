@@ -241,10 +241,8 @@ public:
         assert(genesis.hashMerkleRoot == uint256("0x40bdd3d5ae84b91a71190094a82948400eb3356e87c5376b64d79509cf552d84"));
         assert(hashGenesisBlock == uint256("0xf4bbfc518aa3622dbeb8d2818a606b82c2b8b1ac2f28553ebdb6fc04d7abaccf"));
 
-        vSeeds.push_back(CDNSSeedData("1", "seed1.simplicity-coin.com"));
-        vSeeds.push_back(CDNSSeedData("2", "seed2.simplicity-coin.com"));
-        vSeeds.push_back(CDNSSeedData("3", "seed3.simplicity-coin.com"));
-        vSeeds.push_back(CDNSSeedData("4", "zentec.ddns.net"));
+        vSeeds.push_back(CDNSSeedData("1", "seed1.simplicity-coin.org"));
+        vSeeds.push_back(CDNSSeedData("2", "spl.zentec.network"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 18);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 59);
